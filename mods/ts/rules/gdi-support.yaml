@@ -116,14 +116,16 @@ GACTWR:
 	LineBuildNode:
 		Types: turret
 	Power@base:
-		RequiresCondition: !disabled
 		Amount: -10
+		PauseOnCondition: disabled
 	Power@turrets:
-		RequiresCondition: !disabled && (tower.vulcan || tower.rocket || tower.sam)
+		RequiresCondition: tower.vulcan || tower.rocket || tower.sam
 		Amount: -20
+		PauseOnCondition: disabled
 	Power@samextra:
-		RequiresCondition: !disabled && tower.sam
+		RequiresCondition: tower.sam
 		Amount: -10
+		PauseOnCondition: disabled
 	Pluggable:
 		Conditions:
 			tower.vulcan: tower.vulcan

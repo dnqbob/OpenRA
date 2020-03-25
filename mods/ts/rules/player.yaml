@@ -84,6 +84,8 @@ Player:
 	DeveloperMode:
 		CheckboxEnabled: true
 		CheckboxDisplayOrder: 8
+	PlayerGlobalOrderConfig:
+		DefaultGlobalOrderSettingDisplayOrder: 2
 	Shroud:
 		FogCheckboxDisplayOrder: 3
 	LobbyPrerequisiteCheckbox@GLOBALFACTUNDEPLOY:
