@@ -103,5 +103,10 @@ namespace OpenRA.Mods.Common.Traits
 			// Unpausing the trait restores the previous state
 			SetCondition(self, enabled);
 		}
+
+		public bool IsEnabled()
+		{
+			return enabled;
+		}
 	}
 }

@@ -29,8 +29,13 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 		[ObjectCreator.UseCtor]
 		public RepairOrderButtonLogic(Widget widget, World world)
 		{
-			if (widget is ButtonWidget repair)
-				OrderButtonsChromeUtils.BindOrderButton<RepairOrderGenerator>(world, repair, "repair");
+			var repair = widget as ButtonWidget;
+			var isAdvancedMode = world.LobbyInfo.GlobalSettings.OptionOrDefault("globalorder", false);
+			if (repair != null)
+				if (isAdvancedMode)
+					OrderButtonsChromeUtils.BindOrderButton<AdvancedRepairOrderGenerator>(world, repair, "repair");
+				else
+					OrderButtonsChromeUtils.BindOrderButton<RepairOrderGenerator>(world, repair, "repair");
 		}
 	}
 
@@ -39,8 +44,13 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 		[ObjectCreator.UseCtor]
 		public PowerdownOrderButtonLogic(Widget widget, World world)
 		{
-			if (widget is ButtonWidget power)
-				OrderButtonsChromeUtils.BindOrderButton<PowerDownOrderGenerator>(world, power, "power");
+			var power = widget as ButtonWidget;
+			var isAdvancedMode = world.LobbyInfo.GlobalSettings.OptionOrDefault("globalorder", false);
+			if (power != null)
+				if (isAdvancedMode)
+					OrderButtonsChromeUtils.BindOrderButton<AdvancedPowerDownOrderGenerator>(world, power, "power");
+				else
+					OrderButtonsChromeUtils.BindOrderButton<PowerDownOrderGenerator>(world, power, "power");
 		}
 	}
 
