@@ -22,6 +22,7 @@ The plugin is maintained by
    > FallsToEarthAS
    > PointDefense logic
    > WithFlickeringColoredOverlay
+   > Prism Forwarding logic
 
  * Dnqbob
    > Make a trait for AI to cut down/restore power.

@@ -46,4 +46,7 @@ namespace OpenRA.Mods.AS.Traits
 
 	[RequireExplicitImplementation]
 	public interface INotifyGarrisonerExited { void OnGarrisonerExited(Actor self, Actor garrisoner); }
+
+	[RequireExplicitImplementation]
+	public interface INotifyPrismCharging { void Charging(Actor self, in Target target); }
 }
