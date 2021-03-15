@@ -83,7 +83,6 @@ namespace OpenRA.Mods.AS.Traits
 		public new MobSpawnerMasterInfo Info { get; private set; }
 
 		MobSpawnerSlaveEntry[] slaveEntries;
-
 		int spawnReplaceTicks = 0;
 
 		IPositionable position;
@@ -161,7 +160,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (Info.SlavesHaveFreeWill)
 				return;
 
-			AssignTargetsToSlaves(self, target);
+			AssignTargetsToSlaves(target);
 		}
 
 		void ITick.Tick(Actor self)
@@ -207,7 +206,7 @@ namespace OpenRA.Mods.AS.Traits
 			foreach (var se in slaveEntries)
 			{
 				if (se.IsValid && !se.Actor.IsInWorld)
-					SpawnIntoWorld(self, se.Actor, centerPosition);
+					SpawnIntoWorld(self, se.Actor, centerPosition + se.Offset.Rotate(self.Orientation));
 			}
 
 			spawnReplaceTicks = Util.ApplyPercentageModifiers(Info.RespawnTicks, reloadModifiers.Select(rm => rm.GetReloadModifier()));
@@ -246,7 +245,7 @@ namespace OpenRA.Mods.AS.Traits
 				spawnReplaceTicks = Info.RespawnTicks;
 		}
 
-		void AssignTargetsToSlaves(Actor self, Target target)
+		void AssignTargetsToSlaves(Target target)
 		{
 			foreach (var se in slaveEntries)
 			{
@@ -377,7 +376,7 @@ namespace OpenRA.Mods.AS.Traits
 			else if (self.CurrentActivity is AttackMoveActivity)
 				AttackMoveSlaves(self);
 			else if (self.CurrentActivity is AttackOmni.SetTarget)
-				AssignTargetsToSlaves(self, self.CurrentActivity.GetTargets(self).First());
+				AssignTargetsToSlaves(self.CurrentActivity.GetTargets(self).First());
 		}
 	}
 }

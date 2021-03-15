@@ -138,7 +138,7 @@ namespace OpenRA.Mods.AS.Traits
 				launchConditionTicks = CarrierMasterInfo.LaunchingTicks;
 			}
 
-			SpawnIntoWorld(self, carrierSlaveEntry.Actor, self.CenterPosition);
+			SpawnIntoWorld(self, carrierSlaveEntry.Actor, self.CenterPosition + carrierSlaveEntry.Offset.Rotate(self.Orientation));
 
 			if (spawnContainTokens.TryGetValue(a.Info.Name, out var spawnContainToken) && spawnContainToken.Any())
 				self.RevokeCondition(spawnContainToken.Pop());

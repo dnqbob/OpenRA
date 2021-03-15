@@ -73,6 +73,18 @@ namespace OpenRA
 			}
 		}
 
+		public WAngle Pitch
+		{
+			get
+			{
+				if (LengthSquared == 0)
+					return WAngle.Zero;
+
+				// OpenRA defines north as -y
+				return WAngle.ArcTan(Z, HorizontalLength);
+			}
+		}
+
 		public static WVec Lerp(in WVec a, in WVec b, int mul, int div) { return a + (b - a) * mul / div; }
 
 		public static WVec LerpQuadratic(in WVec a, in WVec b, WAngle pitch, int mul, int div)
