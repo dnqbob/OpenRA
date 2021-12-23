@@ -43,12 +43,10 @@ namespace OpenRA.Mods.AS.Graphics
 			wpos = src.wpos;
 		}
 
-		public IRenderable WithPalette(PaletteReference newPalette) { return this; }
 		public IRenderable WithZOffset(int newOffset) { return this; }
 		public IRenderable OffsetBy(WVec vec) { return this; }
 		public IRenderable AsDecoration() { return this; }
 
-		public PaletteReference Palette { get { return null; } }
 		public bool IsDecoration { get { return false; } }
 
 		WPos IRenderable.Pos { get { return wpos; } }

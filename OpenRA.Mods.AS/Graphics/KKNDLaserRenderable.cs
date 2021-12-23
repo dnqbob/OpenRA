@@ -30,11 +30,9 @@ namespace OpenRA.Mods.AS.Graphics
 		}
 
 		public WPos Pos { get { return new WPos(offsets[0].X, offsets[0].Y, 0); } }
-		public PaletteReference Palette { get { return null; } }
 		public int ZOffset { get { return zOffset; } }
 		public bool IsDecoration { get { return true; } }
 
-		public IRenderable WithPalette(PaletteReference newPalette) { return this; }
 		public IRenderable WithZOffset(int newOffset) { return new KKNDLaserRenderable(offsets, newOffset, width, color); }
 		public IRenderable OffsetBy(WVec vec) { return new KKNDLaserRenderable(offsets.Select(offset => offset + vec).ToArray(), zOffset, width, color); }
 		public IRenderable AsDecoration() { return this; }
