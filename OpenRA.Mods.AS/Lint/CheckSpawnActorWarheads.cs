@@ -13,13 +13,24 @@ using System.Linq;
 using OpenRA.Mods.AS.Warheads;
 using OpenRA.Mods.Common.Lint;
 using OpenRA.Mods.Common.Traits;
+using OpenRA.Server;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Lint
 {
-	class CheckSpawnActorWarheads : ILintRulesPass
+	class CheckSpawnActorWarheads : ILintRulesPass, ILintServerMapPass
 	{
-		public void Run(Action<string> emitError, Action<string> emitWarning, ModData moddata, Ruleset rules)
+		void ILintRulesPass.Run(Action<string> emitError, Action<string> emitWarning, ModData modData, Ruleset rules)
+		{
+			Run(emitError, emitWarning, rules);
+		}
+
+		void ILintServerMapPass.Run(Action<string> emitError, Action<string> emitWarning, ModData modData, MapPreview map, Ruleset mapRules)
+		{
+			Run(emitError, emitWarning, mapRules);
+		}
+
+		void Run(Action<string> emitError, Action<string> emitWarning, Ruleset rules)
 		{
 			foreach (var weaponInfo in rules.Weapons)
 			{

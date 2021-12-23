@@ -45,13 +45,13 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("The condition to grant when this checkbox is enabled.")]
 		public readonly string Condition = "";
 
-		IEnumerable<LobbyOption> ILobbyOptions.LobbyOptions(Ruleset rules)
+		public override object Create(ActorInitializer init) { return new LobbyWorldConditionCheckbox(this); }
+
+		IEnumerable<LobbyOption> ILobbyOptions.LobbyOptions(MapPreview map)
 		{
 			yield return new LobbyBooleanOption(ID, Label, Description,
 				Visible, DisplayOrder, Enabled, Locked);
 		}
-
-		public override object Create(ActorInitializer init) { return new LobbyWorldConditionCheckbox(this); }
 	}
 
 	public class LobbyWorldConditionCheckbox : INotifyCreated
