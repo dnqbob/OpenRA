@@ -10,53 +10,57 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using OpenRA.GameRules;
 using OpenRA.Graphics;
 using OpenRA.Mods.Common;
-using OpenRA.Mods.Common.Effects;
 using OpenRA.Mods.Common.Traits;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
-	[Desc("Allows to play twinkle animations on resources.", "Attach this to the world actor.")]
-	public class ResourceTwinkleLayerInfo : TraitInfo, Requires<IResourceLayerInfo>
+	[Desc("Allows to play periodic explosions on resources.", "Attach this to the world actor.")]
+	public class ResourceExplodeWeaponLayerInfo : TraitInfo, Requires<IResourceLayerInfo>, IRulesetLoaded
 	{
 		[FieldLoader.Require]
-		[Desc("Resource types to twinkle.")]
+		[Desc("Resource types to trigger on.")]
 		public readonly HashSet<string> Types = null;
 
-		[Desc("The percentage of resource cells to play the twinkle animation on.", "Use two values to randomize between them.")]
+		[Desc("The percentage of resource cells to trigger the explosion on in a single frame.", "Use two values to randomize between them.")]
 		public readonly int[] Ratio = { 5 };
 
-		[Desc("Tick interval between two twinkle animation spawning.", "Use two values to randomize between them.")]
+		[Desc("Tick interval between two explosions spawning.", "Use two values to randomize between them.")]
 		public readonly int[] Interval = { 50 };
 
+		[WeaponReference]
 		[FieldLoader.Require]
-		[Desc("Twinkle animation image.")]
-		public readonly string Image = null;
+		[Desc("Has to be defined in weapons.yaml as well.")]
+		public readonly string Weapon = null;
 
-		[SequenceReference(nameof(Image))]
-		[Desc("Twinkle animation sequences.")]
-		public readonly string[] Sequences = new string[] { "idle" };
+		public WeaponInfo WeaponInfo { get; private set; }
 
-		[PaletteReference]
-		[Desc("Twinkle animation palette.")]
-		public readonly string Palette = null;
+		public override object Create(ActorInitializer init) { return new ResourceExplodeWeaponLayer(init.Self, this); }
 
-		public override object Create(ActorInitializer init) { return new ResourceTwinkleLayer(init.Self, this); }
+		public void RulesetLoaded(Ruleset rules, ActorInfo ai)
+		{
+			var weaponToLower = Weapon.ToLowerInvariant();
+			if (!rules.Weapons.TryGetValue(weaponToLower, out var weaponInfo))
+				throw new YamlException("Weapons Ruleset does not contain an entry '{0}'".F(weaponToLower));
+
+			WeaponInfo = weaponInfo;
+		}
 	}
 
-	class ResourceTwinkleLayer : ITick, IWorldLoaded
+	class ResourceExplodeWeaponLayer : ITick, IWorldLoaded
 	{
 		readonly IResourceLayer resourceLayer;
-		readonly ResourceTwinkleLayerInfo info;
+		readonly ResourceExplodeWeaponLayerInfo info;
 
 		readonly World world;
 		readonly HashSet<CPos> cells = new HashSet<CPos>();
 
 		int ticks;
 
-		public ResourceTwinkleLayer(Actor self, ResourceTwinkleLayerInfo info)
+		public ResourceExplodeWeaponLayer(Actor self, ResourceExplodeWeaponLayerInfo info)
 		{
 			world = self.World;
 			this.info = info;
@@ -111,7 +115,20 @@ namespace OpenRA.Mods.AS.Traits
 			var twinkpositions = twinkleable.Take(twinkamount).Select(x => world.Map.CenterOfCell(x));
 
 			foreach (var pos in twinkpositions)
-				world.AddFrameEndTask(w => w.Add(new SpriteEffect(pos, w, info.Image, info.Sequences.Random(w.SharedRandom), info.Palette)));
+			{
+				var args = new WarheadArgs
+				{
+					Weapon = info.WeaponInfo,
+					Source = pos,
+					SourceActor = self,
+					WeaponTarget = Target.FromPos(pos),
+				};
+
+				info.WeaponInfo.Impact(Target.FromPos(pos), args);
+
+				if (info.WeaponInfo.Report != null && info.WeaponInfo.Report.Any())
+					Game.Sound.Play(SoundType.World, info.WeaponInfo.Report.Random(self.World.SharedRandom), self.CenterPosition);
+			}
 
 			ticks = info.Interval.Length == 2
 				? world.SharedRandom.Next(info.Interval[0], info.Interval[1])
