@@ -39,6 +39,12 @@ namespace OpenRA.Mods.Cnc.Traits
 		[Desc("Should parasites be teleported along?")]
 		public readonly bool ExposeInfectors = true;
 
+		public override void RulesetLoaded(Ruleset rules, ActorInfo ai)
+		{
+			if (!ai.HasTraitInfo<MobileInfo>() && !ai.HasTraitInfo<HuskInfo>())
+				throw new YamlException("Chronoshiftable requires actors to have the Mobile or Husk traits.");
+		}
+
 		public override object Create(ActorInitializer init) { return new Chronoshiftable(init, this); }
 	}
 

@@ -466,7 +466,7 @@
 	MapEditorData:
 		Categories: System
 	Interactable:
-		Bounds: 24,24
+		Bounds: 724, 1448
 
 ^Wall:
 	Inherits@1: ^SpriteActor
@@ -570,8 +570,8 @@
 		Locomotor: foot
 	TurnOnIdle:
 	Selectable:
-		DecorationBounds: 15,23,0,-9
-		Bounds: 24,24,0,-9
+		DecorationBounds: 452, 1387, 0, -543
+		Bounds: 724, 1448, 0, -543
 	Voiced:
 		VoiceSet: Infantry
 	Targetable:
@@ -585,7 +585,7 @@
 		ValidDamageStates: Light, Medium, Heavy, Critical
 	QuantizeFacingsFromSequence:
 		Sequence: stand
-	WithInfantryBody:
+	WithSplitAttackPaletteInfantryBody:
 	AttackMove:
 		Voice: Move
 	Passenger:
@@ -705,8 +705,11 @@
 			Prone350Percent: 350
 		DamageTriggers: TriggerProne
 		ProneOffset: 300,0,0
-	WithInfantryBody:
-		IdleSequences: idle1,idle2
+	WithSplitAttackPaletteInfantryBody:
+		IdleSequences: idle1, idle2
+		Palette: player-nomuzzle
+		IsPlayerPalette: true
+		SplitAttackPalette: muzzle
 
 ^Cyborg:
 	Inherits@1: ^Infantry
@@ -734,9 +737,12 @@
 			Prone350Percent: 350
 		ProneOffset: 300,0,0
 		ProneSequencePrefix: crippled-
-	WithInfantryBody:
+	WithSplitAttackPaletteInfantryBody:
 		DefaultAttackSequence: attack
 		IdleSequences: idle1, idle2
+		Palette: player-nomuzzle
+		IsPlayerPalette: true
+		SplitAttackPalette: muzzle
 	GrantConditionOnDamageState@CRITICAL:
 		Condition: critical
 		ValidDamageStates: Critical
@@ -775,7 +781,7 @@
 		TurnSpeed: 20
 		Voice: Move
 	Selectable:
-		Bounds: 40,24
+		Bounds: 1206, 1448
 	Voiced:
 		VoiceSet: Vehicle
 	Targetable:
@@ -981,7 +987,7 @@
 		TurnSpeed: 64
 		Locomotor: visceroid
 	Selectable:
-		Bounds: 26,26,0,-3
+		Bounds: 784, 1568, 0, -181
 	Targetable:
 		TargetTypes: Ground, Creep
 	AttackMove:
@@ -1145,7 +1151,7 @@
 		MaxHeightDelta: 3
 		RequiresCondition: !inside-tunnel
 	Selectable:
-		Bounds: 40,24
+		Bounds: 1206, 1448
 	Voiced:
 		VoiceSet: Vehicle
 	Targetable:
@@ -1207,7 +1213,7 @@
 	MapEditorData:
 		Categories: Tunnel
 	Interactable:
-		Bounds: 144, 144
+		Bounds: 4344, 8688
 
 ^Gate:
 	Inherits: ^Building
