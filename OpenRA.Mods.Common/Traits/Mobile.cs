@@ -139,7 +139,7 @@ namespace OpenRA.Mods.Common.Traits
 				actor =>
 				{
 					var init = actor.GetInitOrDefault<FacingInit>(this);
-					return (init != null ? init.Value : InitialFacing).Angle;
+					return (init?.Value ?? InitialFacing).Angle;
 				},
 				(actor, value) => actor.ReplaceInit(new FacingInit(new WAngle((int)value))));
 		}
@@ -810,12 +810,11 @@ namespace OpenRA.Mods.Common.Traits
 			if (CanEnterCell(above))
 				return above;
 
-			var pathFinder = self.World.WorldActor.Trait<IPathFinder>();
 			List<CPos> path;
 			using (var search = PathSearch.Search(self.World, Locomotor, self, BlockedByActor.All,
 					loc => loc.Layer == 0 && CanEnterCell(loc))
 				.FromPoint(self.Location))
-				path = pathFinder.FindPath(search);
+				path = Pathfinder.FindPath(search);
 
 			if (path.Count > 0)
 				return path[0];
