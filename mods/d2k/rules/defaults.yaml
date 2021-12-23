@@ -456,6 +456,7 @@
 	Sellable:
 		RequiresCondition: !build-incomplete && !being-demolished
 		SellSounds: BUILD1.WAV
+		Notification: StructureSold
 	Guardable:
 		Range: 3c0
 	ThrowsShrapnel:
@@ -497,8 +498,6 @@
 	WithSpriteBody:
 		Name: make
 		Sequence: invisible
-	Sellable:
-		RequiresCondition: !being-demolished
 	WithWallSpriteBody:
 		RequiresCondition: !build-incomplete
 	LineBuildNode:
