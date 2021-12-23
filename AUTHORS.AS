@@ -21,7 +21,7 @@ The plugin is maintained by
    > TintedCells (former radioactivity)
    > FallsToEarthAS
    > PointDefense logic
-   > FlickeringPaletteEffect
+   > WithFlickeringColoredOverlay
 
  * Dnqbob
    > Make a trait for AI to cut down/restore power.
