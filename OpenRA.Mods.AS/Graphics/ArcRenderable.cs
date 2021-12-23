@@ -15,7 +15,7 @@ using OpenRA.Primitives;
 
 namespace OpenRA.Mods.AS.Graphics
 {
-	public struct ArcRenderable : IRenderable, IFinalizedRenderable
+	public class ArcRenderable : IRenderable, IFinalizedRenderable
 	{
 		readonly Color color;
 		readonly WPos a, b;

@@ -13,7 +13,7 @@ using OpenRA.Primitives;
 
 namespace OpenRA.Mods.AS.Graphics
 {
-	public struct RadBeamRenderable : IRenderable, IFinalizedRenderable
+	public class RadBeamRenderable : IRenderable, IFinalizedRenderable
 	{
 		readonly WPos pos;
 		readonly int zOffset;
