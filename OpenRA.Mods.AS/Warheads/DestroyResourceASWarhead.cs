@@ -8,15 +8,13 @@
  */
 #endregion
 
-using System.Collections.Generic;
-using System.Linq;
 using OpenRA.GameRules;
 using OpenRA.Mods.Common.Traits;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Warheads
 {
-	public class DestroyResourceASWarhead : WarheadAS, IRulesetLoaded<WeaponInfo>
+	public class DestroyResourceASWarhead : WarheadAS
 	{
 		[Desc("Size of the area. The resources are seeded within this area.", "Provide 2 values for a ring effect (outer/inner).")]
 		public readonly int[] Size = { 0, 0 };
@@ -25,21 +23,8 @@ namespace OpenRA.Mods.AS.Warheads
 		[Desc("Types of resource which should be destroyed.")]
 		public readonly string[] ResourceTypes;
 
-		[Desc("Amount of resources to be destroyed per cell. 0 means destroy all.")]
-		public readonly int Density = 0;
-
-		readonly HashSet<ResourceTypeInfo> resourceTypeInfos = new HashSet<ResourceTypeInfo>();
-
-		public void RulesetLoaded(Ruleset rules, WeaponInfo info)
-		{
-			var definedResourceTypeInfos = rules.Actors["world"].TraitInfos<ResourceTypeInfo>();
-			foreach (var resourceTypeInfo in ResourceTypes)
-			{
-				var resTypeInfo = definedResourceTypeInfos.FirstOrDefault(x => x.Type == resourceTypeInfo);
-				if (resTypeInfo != null)
-					resourceTypeInfos.Add(resTypeInfo);
-			}
-		}
+		[Desc("Amount of resources to be destroyed per cell.")]
+		public readonly int Density = int.MaxValue;
 
 		// TODO: Allow maximum resource removal to be defined in total.
 		public override void DoImpact(in Target target, WarheadArgs args)
@@ -53,7 +38,7 @@ namespace OpenRA.Mods.AS.Warheads
 
 			var world = firedBy.World;
 			var targetTile = world.Map.CellContaining(target.CenterPosition);
-			var resLayer = world.WorldActor.Trait<ResourceLayer>();
+			var resLayer = world.WorldActor.Trait<IResourceLayer>();
 
 			var minRange = (Size.Length > 1 && Size[1] > 0) ? Size[1] : 0;
 			var allCells = world.Map.FindTilesInAnnulus(targetTile, minRange, Size[0]);
@@ -61,9 +46,10 @@ namespace OpenRA.Mods.AS.Warheads
 			// Destroy resources in the selected tiles
 			foreach (var cell in allCells)
 			{
-				var cellContent = resLayer.GetResourceType(cell);
-				if (cellContent != null && resourceTypeInfos.Contains(cellContent.Info))
-					resLayer.DestroyDensity(cell, Density);
+				foreach (var resourceType in ResourceTypes)
+				{
+					resLayer.RemoveResource(resourceType, cell, Density);
+				}
 			}
 		}
 	}

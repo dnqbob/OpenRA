@@ -8,6 +8,7 @@
  */
 #endregion
 
+using System.Linq;
 using OpenRA.Mods.Common.Traits;
 using OpenRA.Traits;
 
@@ -24,10 +25,13 @@ namespace OpenRA.Mods.AS.Traits
 		[FieldLoader.Require]
 		public readonly int Duration;
 
+		[Desc("ResourceTypes to grant this condition. When empty, all resources trigger.")]
+		public readonly string[] ResourceTypes = { };
+
 		public override object Create(ActorInitializer init) { return new GrantConditionOnResourceDelivery(this); }
 	}
 
-	public class GrantConditionOnResourceDelivery : PausableConditionalTrait<GrantConditionOnResourceDeliveryInfo>, ITick, INotifyCreated, IRefineryResourceDelivered
+	public class GrantConditionOnResourceDelivery : PausableConditionalTrait<GrantConditionOnResourceDeliveryInfo>, ITick, INotifyCreated, INotifyResourceAccepted
 	{
 		readonly GrantConditionOnResourceDeliveryInfo info;
 
@@ -41,9 +45,12 @@ namespace OpenRA.Mods.AS.Traits
 			this.info = info;
 		}
 
-		void IRefineryResourceDelivered.ResourceDelivered(Actor self, int amount)
+		void INotifyResourceAccepted.OnResourceAccepted(Actor self, Actor refinery, string resourceType, int count, int value)
 		{
 			if (IsTraitDisabled)
+				return;
+
+			if (info.ResourceTypes.Length != 0 && !Info.ResourceTypes.Contains(resourceType))
 				return;
 
 			ticks = info.Duration;

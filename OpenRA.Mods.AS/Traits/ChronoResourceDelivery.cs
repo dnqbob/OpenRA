@@ -115,7 +115,7 @@ namespace OpenRA.Mods.AS.Traits
 			Reset(self);
 		}
 
-		public void Harvested(Actor self, ResourceType resource) { }
+		public void Harvested(Actor self, string resource) { }
 		public void Docked() { }
 		public void Undocked() { }
 

@@ -69,7 +69,7 @@ namespace OpenRA.Mods.AS.Traits
 			resourceLayer.CellChanged += UpdateCells;
 		}
 
-		void UpdateCells(CPos cell, ResourceType resType)
+		void UpdateCells(CPos cell, string resType)
 		{
 			if (resType == null)
 			{
@@ -77,7 +77,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 			}
 
-			if (info.Types.Contains(resType.Info.Type))
+			if (info.Types.Contains(resType))
 			{
 				var resourceContent = resourceLayer.GetResource(cell);
 				if (resourceContent.Density > 0)
@@ -92,7 +92,7 @@ namespace OpenRA.Mods.AS.Traits
 			foreach (var cell in w.Map.AllCells)
 			{
 				var type = resourceLayer.GetResource(cell).Type;
-				if (type != null && info.Types.Contains(type.Info.Type))
+				if (type != null && info.Types.Contains(type))
 					cells.Add(cell);
 			}
 		}

@@ -8,9 +8,6 @@
  */
 #endregion
 
-using System;
-using System.Linq;
-using OpenRA;
 using OpenRA.Mods.Common;
 using OpenRA.Mods.Common.Effects;
 using OpenRA.Mods.Common.Traits;
@@ -30,39 +27,52 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly bool ShowTicks = true;
 		public readonly int TickLifetime = 30;
 
+		[Desc("Notify other actors (purifiers etc) on successful crushing.")]
+		public bool NotifyOtherActors = false;
+
 		public override object Create(ActorInitializer init) { return new ResourceCrusher(init.Self, this); }
 	}
 
 	public class ResourceCrusher : ConditionalTrait<ResourceCrusherInfo>, ICrushResource, INotifyOwnerChanged
 	{
-		readonly ResourceType resourceType;
-		readonly ResourceLayer resLayer;
+		readonly IResourceLayer resourceLayer;
+		readonly int resourceValue;
 
 		PlayerResources playerResources;
 
 		public ResourceCrusher(Actor self, ResourceCrusherInfo info)
 			: base(info)
 		{
-			resourceType = self.World.WorldActor.TraitsImplementing<ResourceType>()
-				.FirstOrDefault(t => t.Info.Type == info.ResourceType);
-
-			if (resourceType == null)
-				throw new InvalidOperationException("No such resource type `{0}`".F(info.ResourceType));
-
-			resLayer = self.World.WorldActor.Trait<ResourceLayer>();
+			resourceLayer = self.World.WorldActor.Trait<IResourceLayer>();
 			playerResources = self.Owner.PlayerActor.Trait<PlayerResources>();
+			playerResources.Info.ResourceValues.TryGetValue(Info.ResourceType, out var resValue);
+			resourceValue = resValue;
 		}
 
 		void ICrushResource.CrushResource(Actor self, CPos cell)
 		{
-			if (resourceType == resLayer.GetResourceType(cell))
-			{
-				var resource = resLayer.CrushResource(cell);
-				var value = Util.ApplyPercentageModifiers(resourceType.Info.ValuePerUnit * resource.Value, new int[] { Info.ValueModifier });
+			if (resourceValue == 0)
+				return;
 
-				playerResources.ChangeCash(value);
-				if (Info.ShowTicks && self.Owner.IsAlliedWith(self.World.RenderPlayer))
-					self.World.AddFrameEndTask(w => w.Add(new FloatingText(self.CenterPosition, self.Owner.Color, FloatingText.FormatCashTick(value), Info.TickLifetime)));
+			var resourceAmount = resourceLayer.RemoveResource(Info.ResourceType, cell, int.MaxValue);
+			if (resourceAmount == 0)
+				return;
+
+			var value = Util.ApplyPercentageModifiers(resourceValue * resourceAmount, new int[] { Info.ValueModifier });
+
+			playerResources.ChangeCash(value);
+			if (Info.ShowTicks && self.Owner.IsAlliedWith(self.World.RenderPlayer))
+				self.World.AddFrameEndTask(w => w.Add(new FloatingText(self.CenterPosition, self.Owner.Color, FloatingText.FormatCashTick(value), Info.TickLifetime)));
+
+			if (Info.NotifyOtherActors)
+			{
+				foreach (var notify in self.World.ActorsWithTrait<INotifyResourceAccepted>())
+				{
+					if (notify.Actor.Owner != self.Owner)
+						continue;
+
+					notify.Trait.OnResourceAccepted(notify.Actor, self, Info.ResourceType, resourceAmount, resourceValue);
+				}
 			}
 		}
 

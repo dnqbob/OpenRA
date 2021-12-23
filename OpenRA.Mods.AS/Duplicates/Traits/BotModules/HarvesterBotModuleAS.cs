@@ -67,7 +67,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		IPathFinder pathfinder;
 		DomainIndex domainIndex;
-		ResourceLayer resLayer;
+		IResourceLayer resLayer;
 		ResourceClaimLayer claimLayer;
 		IBotRequestUnitProduction[] requestUnitProduction;
 		int scanForIdleHarvestersTicks;
@@ -100,7 +100,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void IBotTick.BotTick(IBot bot)
 		{
-			if (resLayer == null || resLayer.IsResourceLayerEmpty)
+			if (resLayer == null || resLayer.IsEmpty)
 				return;
 
 			if (--scanForIdleHarvestersTicks > 0)

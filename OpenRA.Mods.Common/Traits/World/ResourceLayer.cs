@@ -266,23 +266,6 @@ namespace OpenRA.Mods.Common.Traits
 			return oldDensity - density;
 		}
 
-		public KeyValuePair<ResourceType, int> CrushResource(CPos cell)
-		{
-			var c = Content[cell];
-			if (c.Type == null)
-				return new KeyValuePair<ResourceType, int>(null, 0);
-
-			var content = new KeyValuePair<ResourceType, int>(c.Type, c.Density);
-
-			Content[cell] = ResourceLayerContents.Empty;
-			world.Map.CustomTerrain[cell] = byte.MaxValue;
-			--resCells;
-
-			CellChanged?.Invoke(cell, null);
-
-			return content;
-		}
-
 		void ClearResources(CPos cell)
 		{
 			if (!Content.Contains(cell))
@@ -296,27 +279,6 @@ namespace OpenRA.Mods.Common.Traits
 			Content[cell] = ResourceLayerContents.Empty;
 			Map.CustomTerrain[cell] = byte.MaxValue;
 			--resCells;
-
-			CellChanged?.Invoke(cell, null);
-		}
-
-		public void DestroyDensity(CPos cell, int density)
-		{
-			var c = Content[cell];
-			if (c.Type == null)
-				return;
-
-			if (c.Density < density)
-			{
-				Content[cell] = ResourceLayerContents.Empty;
-				world.Map.CustomTerrain[cell] = byte.MaxValue;
-				--resCells;
-			}
-			else
-			{
-				c.Density -= density;
-				Content[cell] = c;
-			}
 
 			CellChanged?.Invoke(cell, null);
 		}

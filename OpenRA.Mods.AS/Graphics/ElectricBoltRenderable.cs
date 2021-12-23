@@ -34,7 +34,12 @@ namespace OpenRA.Mods.AS.Graphics
 		public bool IsDecoration { get { return true; } }
 
 		public IRenderable WithZOffset(int newOffset) { return new ElectricBoltRenderable(offsets, newOffset, width, color); }
-		public IRenderable OffsetBy(WVec vec) { return new ElectricBoltRenderable(offsets.Select(offset => offset + vec).ToArray(), zOffset, width, color); }
+		public IRenderable OffsetBy(in WVec vec)
+		{
+			var cachedWVec = vec;
+			return new ElectricBoltRenderable(offsets.Select(offset => offset + cachedWVec).ToArray(), zOffset, width, color);
+		}
+
 		public IRenderable AsDecoration() { return this; }
 
 		public IFinalizedRenderable PrepareRender(WorldRenderer wr) { return this; }
