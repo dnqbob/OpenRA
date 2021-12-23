@@ -13,6 +13,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.World)]
 	[Desc("Enables a condition on the world actor if the checkbox is enabled.")]
 	public class LobbyWorldConditionCheckboxInfo : TraitInfo, ILobbyOptions
 	{

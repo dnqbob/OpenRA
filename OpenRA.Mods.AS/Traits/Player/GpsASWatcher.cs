@@ -15,6 +15,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player | SystemActors.EditorPlayer)]
 	[Desc("Required for AS GPS-related logic to function. Attach this to the player actor.")]
 	class GpsASWatcherInfo : TraitInfo
 	{

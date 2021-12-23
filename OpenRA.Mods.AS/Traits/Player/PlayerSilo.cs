@@ -13,6 +13,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player | SystemActors.EditorPlayer)]
 	[Desc("Used for silos defined on the player actor.")]
 	class PlayerSiloInfo : TraitInfo
 	{

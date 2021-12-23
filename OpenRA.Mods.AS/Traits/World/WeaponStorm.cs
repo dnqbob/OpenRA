@@ -17,6 +17,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Create a map-wide weapon storm.")]
 	class WeaponStormInfo : ConditionalTraitInfo, IRulesetLoaded
 	{

@@ -15,6 +15,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player | SystemActors.EditorPlayer)]
 	[Desc("Lets the player actor generate cash in a set periodic time.")]
 	public class PlayerCashTricklerInfo : PausableConditionalTraitInfo, Requires<PlayerResourcesInfo>
 	{

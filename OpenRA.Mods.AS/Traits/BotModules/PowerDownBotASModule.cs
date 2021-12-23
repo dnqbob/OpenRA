@@ -17,6 +17,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player)]
 	[Desc("Manages AI powerdown.")]
 	public class PowerDownBotASModuleInfo : ConditionalTraitInfo
 	{

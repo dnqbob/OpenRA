@@ -14,6 +14,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player)]
 	[Desc("Manages AI repairing base buildings.")]
 	public class BuildingRepairBotModuleASInfo : ConditionalTraitInfo
 	{

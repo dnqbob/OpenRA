@@ -14,6 +14,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player)]
 	[Desc("Allows the AI to issue the orders the AISupportPowerExplicitNotifier traits trigger.")]
 	public class SupportPowerExplicitTargetBotModuleInfo : ConditionalTraitInfo
 	{

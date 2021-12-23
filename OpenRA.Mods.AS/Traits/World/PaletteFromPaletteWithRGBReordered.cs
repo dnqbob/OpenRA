@@ -25,6 +25,7 @@ namespace OpenRA.Mods.AS.Traits
 		GRBA
 	}
 
+	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Create a palette by reordering the channels of another palette.")]
 	class PaletteFromPaletteWithRGBReorderedInfo : TraitInfo
 	{

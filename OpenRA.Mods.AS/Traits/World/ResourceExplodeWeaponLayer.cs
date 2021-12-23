@@ -18,6 +18,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.World)]
 	[Desc("Allows to play periodic explosions on resources.", "Attach this to the world actor.")]
 	public class ResourceExplodeWeaponLayerInfo : TraitInfo, Requires<IResourceLayerInfo>, IRulesetLoaded
 	{

@@ -14,6 +14,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player | SystemActors.EditorPlayer)]
 	[Desc("Attach this to the player actor.")]
 	public class TauntsInfo : TraitInfo, ILobbyOptions
 	{

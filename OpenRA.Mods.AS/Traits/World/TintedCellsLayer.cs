@@ -22,6 +22,7 @@ namespace OpenRA.Mods.AS.Traits
 		Logarithmic
 	}
 
+	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Has to be attached to world actor. ")]
 	public class TintedCellsLayerInfo : TraitInfo
 	{

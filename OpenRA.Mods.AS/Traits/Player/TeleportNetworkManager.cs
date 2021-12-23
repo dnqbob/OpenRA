@@ -14,6 +14,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.Player | SystemActors.EditorPlayer)]
 	[Desc("This must be attached to player in order for TeleportNetwork to work.")]
 	public class TeleportNetworkManagerInfo : TraitInfo
 	{

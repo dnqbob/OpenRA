@@ -16,6 +16,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
 {
+	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Create a palette by shifting the hue using HSV model on another palette.")]
 	class PaletteFromPaletteWithHueShiftInfo : TraitInfo
 	{
