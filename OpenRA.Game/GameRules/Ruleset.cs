@@ -67,8 +67,7 @@ namespace OpenRA
 
 			foreach (var weapon in Weapons)
 			{
-				var projectileLoaded = weapon.Value.Projectile as IRulesetLoaded<WeaponInfo>;
-				if (projectileLoaded != null)
+				if (weapon.Value.Projectile is IRulesetLoaded<WeaponInfo> projectileLoaded)
 				{
 					try
 					{
@@ -82,8 +81,7 @@ namespace OpenRA
 
 				foreach (var warhead in weapon.Value.Warheads)
 				{
-					var cacher = warhead as IRulesetLoaded<WeaponInfo>;
-					if (cacher != null)
+					if (warhead is IRulesetLoaded<WeaponInfo> cacher)
 					{
 						try
 						{
@@ -117,7 +115,7 @@ namespace OpenRA
 			if (filterNode != null)
 				yamlNodes = yamlNodes.Where(k => !filterNode(k));
 
-			return new ReadOnlyDictionary<string, T>(yamlNodes.ToDictionaryWithConflictLog(k => k.Key.ToLowerInvariant(), makeObject, "LoadFromManifest<" + name + ">"));
+			return yamlNodes.ToDictionaryWithConflictLog(k => k.Key.ToLowerInvariant(), makeObject, "LoadFromManifest<" + name + ">");
 		}
 
 		public static Ruleset LoadDefaults(ModData modData)

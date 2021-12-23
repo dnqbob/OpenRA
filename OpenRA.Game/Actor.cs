@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Eluant;
@@ -359,8 +360,7 @@ namespace OpenRA
 
 		public override bool Equals(object obj)
 		{
-			var o = obj as Actor;
-			return o != null && Equals(o);
+			return obj is Actor o && Equals(o);
 		}
 
 		public bool Equals(Actor other)
