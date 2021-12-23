@@ -36,22 +36,13 @@ namespace OpenRA.Mods.Common.Terrain
 	public sealed class DefaultTileCache : IDisposable
 	{
 		readonly Dictionary<ushort, TheaterTemplate> templates = new Dictionary<ushort, TheaterTemplate>();
-		SheetBuilder sheetBuilder;
+		readonly Cache<SheetType, SheetBuilder> sheetBuilders;
 		readonly Sprite missingTile;
 		readonly MersenneTwister random;
 
 		public DefaultTileCache(DefaultTerrain terrainInfo, Action<uint, string> onMissingImage = null)
 		{
-			var allocated = false;
-
-			Func<Sheet> allocate = () =>
-			{
-				if (allocated)
-					throw new SheetOverflowException("Terrain sheet overflow. Try increasing the tileset SheetSize parameter.");
-				allocated = true;
-
-				return new Sheet(SheetType.Indexed, new Size(terrainInfo.SheetSize, terrainInfo.SheetSize));
-			};
+			sheetBuilders = new Cache<SheetType, SheetBuilder>(t => new SheetBuilder(t, terrainInfo.SheetSize));
 
 			random = new MersenneTwister();
 
@@ -61,9 +52,13 @@ namespace OpenRA.Mods.Common.Terrain
 				var variants = new List<Sprite[]>();
 				var templateInfo = (DefaultTerrainTemplateInfo)t.Value;
 
-				foreach (var i in templateInfo.Images)
+				for (var ii = 0; ii < templateInfo.Images.Length; ii++)
 				{
+					var i = templateInfo.Images[ii];
+
 					ISpriteFrame[] allFrames;
+					ISpriteFrame[] depthFrames = null;
+
 					if (onMissingImage != null)
 					{
 						try
@@ -79,7 +74,26 @@ namespace OpenRA.Mods.Common.Terrain
 					else
 						allFrames = frameCache[i];
 
-					var frameCount = terrainInfo.EnableDepth ? allFrames.Length / 2 : allFrames.Length;
+					if (terrainInfo.EnableDepth && templateInfo.DepthImages != null && templateInfo.DepthImages.Length == templateInfo.Images.Length)
+					{
+						var di = templateInfo.DepthImages[ii];
+						if (onMissingImage != null)
+						{
+							try
+							{
+								depthFrames = frameCache[di];
+							}
+							catch (FileNotFoundException)
+							{
+								onMissingImage(t.Key, di);
+								continue;
+							}
+						}
+						else
+							depthFrames = frameCache[di];
+					}
+
+					var frameCount = terrainInfo.EnableDepth && depthFrames == null ? allFrames.Length / 2 : allFrames.Length;
 					var indices = templateInfo.Frames != null ? templateInfo.Frames : Exts.MakeArray(t.Value.TilesCount, j => j);
 
 					var start = indices.Min();
@@ -99,25 +113,16 @@ namespace OpenRA.Mods.Common.Terrain
 						var offset = new float3(f.Offset, zOffset);
 						var type = SheetBuilder.FrameTypeToSheetType(f.Type);
 
-						// Defer SheetBuilder creation until we know what type of frames we are loading!
-						// TODO: Support mixed indexed and BGRA frames
-						if (sheetBuilder == null)
-							sheetBuilder = new SheetBuilder(SheetBuilder.FrameTypeToSheetType(f.Type), allocate);
-						else if (type != sheetBuilder.Type)
-							throw new YamlException("Sprite type mismatch. Terrain sprites must all be either Indexed or RGBA.");
-
-						var s = sheetBuilder.Allocate(f.Size, zRamp, offset);
+						var s = sheetBuilders[type].Allocate(f.Size, zRamp, offset);
 						OpenRA.Graphics.Util.FastCopyIntoChannel(s, f.Data, f.Type);
 
 						if (terrainInfo.EnableDepth)
 						{
-							var depthFrame = allFrames[j + frameCount];
-							var ss = sheetBuilder.Allocate(f.Size, zRamp, offset);
+							var depthFrame = depthFrames != null ? depthFrames[j] : allFrames[j + frameCount];
+							var depthType = SheetBuilder.FrameTypeToSheetType(depthFrame.Type);
+							var ss = sheetBuilders[depthType].Allocate(depthFrame.Size, zRamp, offset);
 							OpenRA.Graphics.Util.FastCopyIntoChannel(ss, depthFrame.Data, depthFrame.Type);
-
-							// s and ss are guaranteed to use the same sheet
-							// because of the custom terrain sheet allocation
-							s = new SpriteWithSecondaryData(s, s.Sheet, ss.Bounds, ss.Channel);
+							s = new SpriteWithSecondaryData(s, ss.Sheet, ss.Bounds, ss.Channel);
 						}
 
 						return s;
@@ -137,12 +142,22 @@ namespace OpenRA.Mods.Common.Terrain
 			}
 
 			// 1x1px transparent tile
-			if (sheetBuilder.Type == SheetType.BGRA)
-				missingTile = sheetBuilder.Add(new byte[4], SpriteFrameType.Bgra32, new Size(1, 1));
-			else
-				missingTile = sheetBuilder.Add(new byte[1], SpriteFrameType.Indexed8, new Size(1, 1));
+			var missingDataLength = 1;
+			var missingFrameType = SpriteFrameType.Indexed8;
+			var missingSheetType = SheetType.Indexed;
 
-			Sheet.ReleaseBuffer();
+			// Avoid creating an indexed sheet if all tiles are BGRA
+			var missing = sheetBuilders.FirstOrDefault();
+			if (missing.Value != null && missing.Key == SheetType.BGRA)
+			{
+				missingDataLength = 4;
+				missingFrameType = SpriteFrameType.Bgra32;
+				missingSheetType = SheetType.BGRA;
+			}
+
+			missingTile = sheetBuilders[missingSheetType].Add(new byte[missingDataLength], missingFrameType, new Size(1, 1));
+			foreach (var sb in sheetBuilders.Values)
+				sb.Current.ReleaseBuffer();
 		}
 
 		public bool HasTileSprite(TerrainTile r, int? variant = null)
@@ -162,11 +177,12 @@ namespace OpenRA.Mods.Common.Terrain
 			return template.Sprites[start * template.Stride + r.Index];
 		}
 
-		public Sheet Sheet { get { return sheetBuilder.Current; } }
+		public Sprite MissingTile { get { return missingTile; } }
 
 		public void Dispose()
 		{
-			sheetBuilder.Dispose();
+			foreach (var sb in sheetBuilders.Values)
+				sb.Dispose();
 		}
 	}
 }

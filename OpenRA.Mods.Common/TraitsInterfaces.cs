@@ -655,7 +655,7 @@ namespace OpenRA.Mods.Common.Traits
 	[RequireExplicitImplementation]
 	public interface ITiledTerrainRenderer
 	{
-		Sheet Sheet { get; }
+		Sprite MissingTile { get; }
 		Sprite TileSprite(TerrainTile r, int? variant = null);
 		Rectangle TemplateBounds(TerrainTemplateInfo template);
 		IEnumerable<IRenderable> RenderUIPreview(WorldRenderer wr, TerrainTemplateInfo template, int2 origin, float scale);
