@@ -160,7 +160,7 @@ namespace OpenRA.Mods.AS.Traits
 			return SubCell.Invalid;
 		}
 
-		public void SetVisualPosition(Actor self, WPos pos) { SetPosition(self, pos); }
+		public void SetCenterPosition(Actor self, WPos pos) { SetPosition(self, pos); }
 
 		// Changes position, but not altitude
 		public void SetPosition(Actor self, CPos cell, SubCell subCell = SubCell.Any)
@@ -229,7 +229,7 @@ namespace OpenRA.Mods.AS.Traits
 			return new BallisticMissileFly(self, target, this);
 		}
 
-		public Activity VisualMove(Actor self, WPos fromPos, WPos toPos)
+		public Activity LocalMove(Actor self, WPos fromPos, WPos toPos)
 		{
 			return new BallisticMissileFly(self, Target.FromPos(toPos), this);
 		}

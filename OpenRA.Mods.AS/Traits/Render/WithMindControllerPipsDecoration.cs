@@ -64,7 +64,7 @@ namespace OpenRA.Mods.AS.Traits.Render
 			for (var i = 0; i < pipCount; i++)
 			{
 				pips.PlayRepeating(i < mindController.Slaves.Count() ? Info.FullSequence : Info.EmptySequence);
-				yield return new UISpriteRenderable(pips.Image, self.CenterPosition, screenPos, 0, palette, 1f);
+				yield return new UISpriteRenderable(pips.Image, self.CenterPosition, screenPos, 0, palette);
 
 				screenPos += pipStride;
 			}
