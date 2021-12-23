@@ -10,7 +10,7 @@ function All-Command
 		return
 	}
 
-	dotnet build /p:Configuration=Release /nologo
+	dotnet build -c Release --nologo -p:TargetPlatform=win-x64
 	if ($lastexitcode -ne 0)
 	{
 		Write-Host "Build failed. If just the development tools failed to build, try installing Visual Studio. You may also still be able to run the game." -ForegroundColor Red
@@ -92,19 +92,19 @@ function Test-Command
 
 	Write-Host "Testing mods..." -ForegroundColor Cyan
 	Write-Host "Testing Tiberian Sun mod MiniYAML..." -ForegroundColor Cyan
-	Invoke-Expression "$utilityPath ts --check-yaml"
+	InvokeCommand "$utilityPath ts --check-yaml"
 	Write-Host "Testing Dune 2000 mod MiniYAML..." -ForegroundColor Cyan
-	Invoke-Expression "$utilityPath d2k --check-yaml"
+	InvokeCommand "$utilityPath d2k --check-yaml"
 	Write-Host "Testing Tiberian Dawn mod MiniYAML..." -ForegroundColor Cyan
-	Invoke-Expression "$utilityPath cnc --check-yaml"
+	InvokeCommand "$utilityPath cnc --check-yaml"
 	Write-Host "Testing Red Alert mod MiniYAML..." -ForegroundColor Cyan
-	Invoke-Expression "$utilityPath ra --check-yaml"
+	InvokeCommand "$utilityPath ra --check-yaml"
 }
 
 function Check-Command
 {
 	Write-Host "Compiling in debug configuration..." -ForegroundColor Cyan
-	dotnet build /p:Configuration=Debug /nologo
+	dotnet build -c Debug --nologo -p:TargetPlatform=win-x64
 	if ($lastexitcode -ne 0)
 	{
 		Write-Host "Build failed." -ForegroundColor Red
@@ -113,10 +113,10 @@ function Check-Command
 	if ((CheckForUtility) -eq 0)
 	{
 		Write-Host "Checking for explicit interface violations..." -ForegroundColor Cyan
-		Invoke-Expression "$utilityPath all --check-explicit-interfaces"
+		InvokeCommand "$utilityPath all --check-explicit-interfaces"
 
 		Write-Host "Checking for incorrect conditional trait interface overrides..." -ForegroundColor Cyan
-		Invoke-Expression "$utilityPath all --check-conditional-trait-interface-overrides"
+		InvokeCommand "$utilityPath all --check-conditional-trait-interface-overrides"
 	}
 }
 
@@ -191,6 +191,20 @@ function WaitForInput
 			exit
 		}
 		Start-Sleep -Milliseconds 50
+	}
+}
+
+function InvokeCommand
+{
+	param($expression)
+	# $? is the return value of the called expression
+	# Invoke-Expression itself will always succeed, even if the invoked expression fails
+	# So temporarily store the return value in $success
+	$expression += '; $success = $?'
+	Invoke-Expression $expression
+	if ($success -eq $False)
+	{
+		exit 1
 	}
 }
 

@@ -659,16 +659,28 @@ namespace OpenRA.Server
 			}
 		}
 
-		void DispatchOrdersToClient(Connection c, int client, int frame, byte[] data)
+		byte[] CreateFrame(int client, int frame, byte[] data)
 		{
-			try
+			using (var ms = new MemoryStream(data.Length + 12))
 			{
-				var ms = new MemoryStream(data.Length + 12);
 				ms.WriteArray(BitConverter.GetBytes(data.Length + 4));
 				ms.WriteArray(BitConverter.GetBytes(client));
 				ms.WriteArray(BitConverter.GetBytes(frame));
 				ms.WriteArray(data);
-				SendData(c.Socket, ms.ToArray());
+				return ms.GetBuffer();
+			}
+		}
+
+		void DispatchOrdersToClient(Connection c, int client, int frame, byte[] data)
+		{
+			DispatchFrameToClient(c, client, CreateFrame(client, frame, data));
+		}
+
+		void DispatchFrameToClient(Connection c, int client, byte[] frameData)
+		{
+			try
+			{
+				SendData(c.Socket, frameData);
 			}
 			catch (Exception e)
 			{
@@ -776,8 +788,9 @@ namespace OpenRA.Server
 		public void DispatchOrdersToClients(Connection conn, int frame, byte[] data)
 		{
 			var from = conn != null ? conn.PlayerIndex : 0;
+			var frameData = CreateFrame(from, frame, data);
 			foreach (var c in Conns.Except(conn).ToList())
-				DispatchOrdersToClient(c, from, frame, data);
+				DispatchFrameToClient(c, from, frameData);
 
 			if (recorder != null)
 			{
