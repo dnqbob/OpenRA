@@ -179,7 +179,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public IReadOnlyDictionary<CPos, SubCell> OccupiedCells(ActorInfo info, CPos location, SubCell subCell = SubCell.Any) { return new ReadOnlyDictionary<CPos, SubCell>(); }
 
-		bool IOccupySpaceInfo.SharesCell { get { return false; } }
+		bool IOccupySpaceInfo.SharesCell => false;
 
 		// Used to determine if an aircraft can spawn landed
 		public bool CanEnterCell(World world, Actor self, CPos cell, SubCell subCell = SubCell.FullCell, Actor ignoreActor = null, BlockedByActor check = BlockedByActor.All)
@@ -224,7 +224,7 @@ namespace OpenRA.Mods.Common.Traits
 		IDisposable reservation;
 		IEnumerable<int> speedModifiers;
 		INotifyMoving[] notifyMoving;
-		INotifyVisualPositionChanged[] notifyVisualPositionChanged;
+		INotifyCenterPositionChanged[] notifyCenterPositionChanged;
 		IOverrideAircraftLanding overrideAircraftLanding;
 
 		WRot orientation;
@@ -232,30 +232,30 @@ namespace OpenRA.Mods.Common.Traits
 		[Sync]
 		public WAngle Facing
 		{
-			get { return orientation.Yaw; }
-			set { orientation = orientation.WithYaw(value); }
+			get => orientation.Yaw;
+			set => orientation = orientation.WithYaw(value);
 		}
 
 		public WAngle Pitch
 		{
-			get { return orientation.Pitch; }
-			set { orientation = orientation.WithPitch(value); }
+			get => orientation.Pitch;
+			set => orientation = orientation.WithPitch(value);
 		}
 
 		public WAngle Roll
 		{
-			get { return orientation.Roll; }
-			set { orientation = orientation.WithRoll(value); }
+			get => orientation.Roll;
+			set => orientation = orientation.WithRoll(value);
 		}
 
-		public WRot Orientation { get { return orientation; } }
+		public WRot Orientation => orientation;
 
 		[Sync]
 		public WPos CenterPosition { get; private set; }
 
-		public CPos TopLeft { get { return self.World.Map.CellContaining(CenterPosition); } }
-		public WAngle TurnSpeed { get { return !IsTraitDisabled && !IsTraitPaused ? Info.TurnSpeed : WAngle.Zero; } }
-		public WAngle? IdleTurnSpeed { get { return Info.IdleTurnSpeed; } }
+		public CPos TopLeft => self.World.Map.CellContaining(CenterPosition);
+		public WAngle TurnSpeed => !IsTraitDisabled && !IsTraitPaused ? Info.TurnSpeed : WAngle.Zero;
+		public WAngle? IdleTurnSpeed => Info.IdleTurnSpeed;
 
 		public Actor ReservedActor { get; private set; }
 		public bool MayYieldReservation { get; private set; }
@@ -272,7 +272,7 @@ namespace OpenRA.Mods.Common.Traits
 			return self.CenterPosition - new WVec(WDist.Zero, WDist.Zero, self.World.Map.DistanceAboveTerrain(self.CenterPosition));
 		}
 
-		public bool AtLandAltitude { get { return self.World.Map.DistanceAboveTerrain(GetPosition()) == LandAltitude; } }
+		public bool AtLandAltitude => self.World.Map.DistanceAboveTerrain(GetPosition()) == LandAltitude;
 
 		bool airborne;
 		bool cruising;
@@ -346,7 +346,7 @@ namespace OpenRA.Mods.Common.Traits
 			notifyMoving = self.TraitsImplementing<INotifyMoving>().ToArray();
 			positionOffsets = self.TraitsImplementing<IAircraftCenterPositionOffset>().ToArray();
 			overrideAircraftLanding = self.TraitOrDefault<IOverrideAircraftLanding>();
-			notifyVisualPositionChanged = self.TraitsImplementing<INotifyVisualPositionChanged>().ToArray();
+			notifyCenterPositionChanged = self.TraitsImplementing<INotifyCenterPositionChanged>().ToArray();
 			notifyCrushResource = self.TraitsImplementing<ICrushResource>().ToArray();
 			base.Created(self);
 		}
@@ -598,10 +598,7 @@ namespace OpenRA.Mods.Common.Traits
 			return allowedToEnterRearmer || allowedToEnterRepairer;
 		}
 
-		public int MovementSpeed
-		{
-			get { return !IsTraitDisabled && !IsTraitPaused ? Util.ApplyPercentageModifiers(Info.Speed, speedModifiers) : 0; }
-		}
+		public int MovementSpeed => !IsTraitDisabled && !IsTraitPaused ? Util.ApplyPercentageModifiers(Info.Speed, speedModifiers) : 0;
 
 		public (CPos Cell, SubCell SubCell)[] OccupiedCells()
 		{
@@ -772,7 +769,7 @@ namespace OpenRA.Mods.Common.Traits
 			return SubCell.Invalid;
 		}
 
-		public void SetVisualPosition(Actor self, WPos pos) { SetPosition(self, pos); }
+		public void SetCenterPosition(Actor self, WPos pos) { SetPosition(self, pos); }
 
 		// Changes position, but not altitude
 		public void SetPosition(Actor self, CPos cell, SubCell subCell = SubCell.Any)
@@ -803,10 +800,10 @@ namespace OpenRA.Mods.Common.Traits
 			else if (!isCruising && cruising)
 				OnCruisingAltitudeLeft();
 
-			// NB: This can be called from the constructor before notifyVisualPositionChanged is assigned.
-			if (notify && notifyVisualPositionChanged != null)
-				foreach (var n in notifyVisualPositionChanged)
-					n.VisualPositionChanged(self, 0, 0);
+			// NB: This can be called from the constructor before notifyCenterPositionChanged is assigned.
+			if (notify && notifyCenterPositionChanged != null)
+				foreach (var n in notifyCenterPositionChanged)
+					n.CenterPositionChanged(self, 0, 0);
 
 			FinishedMoving(self);
 		}
@@ -955,10 +952,10 @@ namespace OpenRA.Mods.Common.Traits
 			return new Land(self, target);
 		}
 
-		public Activity VisualMove(Actor self, WPos fromPos, WPos toPos)
+		public Activity LocalMove(Actor self, WPos fromPos, WPos toPos)
 		{
 			// TODO: Ignore repulsion when moving
-			var activities = new CallFunc(() => SetVisualPosition(self, fromPos));
+			var activities = new CallFunc(() => SetCenterPosition(self, fromPos));
 			activities.Queue(new Fly(self, Target.FromPos(toPos)));
 			return activities;
 		}
@@ -973,10 +970,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public MovementType CurrentMovementTypes
 		{
-			get
-			{
-				return movementTypes;
-			}
+			get => movementTypes;
 
 			set
 			{
@@ -1253,7 +1247,7 @@ namespace OpenRA.Mods.Common.Traits
 			readonly Aircraft aircraft;
 
 			public string OrderID { get; protected set; }
-			public int OrderPriority { get { return 4; } }
+			public int OrderPriority => 4;
 			public bool IsQueued { get; protected set; }
 
 			public AircraftMoveOrderTargeter(Aircraft aircraft)

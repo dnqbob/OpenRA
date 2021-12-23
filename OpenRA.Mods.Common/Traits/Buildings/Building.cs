@@ -33,7 +33,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		[Desc("x means cell is blocked, capital X means blocked but not counting as targetable, ",
 			"= means part of the footprint but passable, _ means completely empty.")]
-		[FieldLoader.LoadUsing("LoadFootprint")]
+		[FieldLoader.LoadUsing(nameof(LoadFootprint))]
 		public readonly Dictionary<CVec, FootprintCellType> Footprint;
 
 		public readonly CVec Dimensions = new CVec(1, 1);
@@ -244,7 +244,7 @@ namespace OpenRA.Mods.Common.Traits
 			return new ReadOnlyDictionary<CPos, SubCell>(occupied);
 		}
 
-		bool IOccupySpaceInfo.SharesCell { get { return false; } }
+		bool IOccupySpaceInfo.SharesCell => false;
 
 		public IEnumerable<IRenderable> RenderAnnotations(WorldRenderer wr, World w, ActorInfo ai, WPos centerPosition)
 		{
@@ -270,7 +270,7 @@ namespace OpenRA.Mods.Common.Traits
 		(CPos, SubCell)[] targetableCells;
 		CPos[] transitOnlyCells;
 
-		public CPos TopLeft { get { return topLeft; } }
+		public CPos TopLeft => topLeft;
 		public WPos CenterPosition { get; private set; }
 
 		public Building(ActorInitializer init, BuildingInfo info)

@@ -104,10 +104,7 @@ namespace OpenRA.Traits
 		bool disabled;
 		public bool Disabled
 		{
-			get
-			{
-				return disabled;
-			}
+			get => disabled;
 
 			set
 			{
@@ -119,7 +116,7 @@ namespace OpenRA.Traits
 		}
 
 		bool fogEnabled;
-		public bool FogEnabled { get { return !Disabled && fogEnabled; } }
+		public bool FogEnabled => !Disabled && fogEnabled;
 		public bool ExploreMapEnabled { get; private set; }
 
 		public int Hash { get; private set; }
@@ -321,7 +318,7 @@ namespace OpenRA.Traits
 		public void Explore(Shroud s)
 		{
 			if (map.Bounds != s.map.Bounds)
-				throw new ArgumentException("The map bounds of these shrouds do not match.", "s");
+				throw new ArgumentException("The map bounds of these shrouds do not match.", nameof(s));
 
 			foreach (var puv in map.ProjectedCells)
 			{
