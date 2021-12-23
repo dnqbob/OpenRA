@@ -37,9 +37,11 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("The deployed state's length in ticks.")]
 		public readonly int DeployedTicks;
 
+		[CursorReference]
 		[Desc("Cursor to display when able to (un)deploy the actor.")]
 		public readonly string DeployCursor = "deploy";
 
+		[CursorReference]
 		[Desc("Cursor to display when unable to (un)deploy the actor.")]
 		public readonly string DeployBlockedCursor = "deploy-blocked";
 

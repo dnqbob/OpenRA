@@ -51,6 +51,10 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("The speech notification to play when selecting a primary exit.")]
 		public readonly string SelectionNotification = "PrimaryBuildingSelected";
 
+		[CursorReference]
+		[Desc("Cursor to display to be able to select the primary building.")]
+		public readonly string PrimaryCursor = "deploy";
+
 		public override object Create(ActorInitializer init) { return new TeleportNetworkPrimaryExit(init.Self, this); }
 	}
 
@@ -71,7 +75,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		public IEnumerable<IOrderTargeter> Orders
 		{
-			get { yield return new DeployOrderTargeter("TeleportNetworkPrimaryExit", 1); }
+			get { yield return new DeployOrderTargeter("TeleportNetworkPrimaryExit", 1, () => info.PrimaryCursor); }
 		}
 
 		public Order IssueOrder(Actor self, IOrderTargeter order, in Target target, bool queued)
