@@ -41,7 +41,7 @@ namespace OpenRA.Mods.AS.Traits.Render
 		float ISelectionBar.GetValue()
 		{
 			var viewer = self.World.RenderPlayer ?? self.World.LocalPlayer;
-			if (viewer != null && !info.DisplayPlayerRelationships.HasStance(self.Owner.RelationshipWith(viewer)))
+			if (viewer != null && !info.DisplayPlayerRelationships.HasRelationship(self.Owner.RelationshipWith(viewer)))
 				return 0;
 
 			var complete = cashTricklers.Min(ct => (float)ct.Ticks / ct.Info.Interval);

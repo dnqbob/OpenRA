@@ -79,7 +79,7 @@ namespace OpenRA.Mods.AS.Warheads
 		bool IsValidForOwnerChange(Actor victim, Actor firedBy)
 		{
 			var stance = firedBy.Owner.RelationshipWith(victim.Owner);
-			if (!ChangeOwnerValidStances.HasStance(stance))
+			if (!ChangeOwnerValidStances.HasRelationship(stance))
 				return false;
 
 			// A target type is valid if it is in the valid targets list, and not in the invalid targets list.

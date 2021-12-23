@@ -113,7 +113,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			var stance = self.Owner.RelationshipWith(a.Owner);
-			if (!info.ValidStances.HasStance(stance))
+			if (!info.ValidStances.HasRelationship(stance))
 				return;
 
 			if (a.TraitsImplementing<GrantHordeBonus>().All(h => h.Info.HordeType != info.HordeType))
@@ -137,7 +137,7 @@ namespace OpenRA.Mods.AS.Traits
 			if ((produced.CenterPosition - self.CenterPosition).HorizontalLengthSquared <= info.Range.LengthSquared)
 			{
 				var stance = self.Owner.RelationshipWith(produced.Owner);
-				if (!info.ValidStances.HasStance(stance))
+				if (!info.ValidStances.HasRelationship(stance))
 					return;
 
 				if (produced.TraitsImplementing<GrantHordeBonus>().All(h => h.Info.HordeType != info.HordeType))

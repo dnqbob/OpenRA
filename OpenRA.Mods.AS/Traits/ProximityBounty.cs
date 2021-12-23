@@ -133,7 +133,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			var stance = self.Owner.RelationshipWith(a.Owner);
-			if (!Info.ValidStances.HasStance(stance))
+			if (!Info.ValidStances.HasRelationship(stance))
 				return;
 
 			var gpbs = a.TraitsImplementing<GivesProximityBounty>();
@@ -155,7 +155,7 @@ namespace OpenRA.Mods.AS.Traits
 			if ((produced.CenterPosition - self.CenterPosition).HorizontalLengthSquared <= Info.Range.LengthSquared)
 			{
 				var stance = self.Owner.RelationshipWith(produced.Owner);
-				if (!Info.ValidStances.HasStance(stance))
+				if (!Info.ValidStances.HasRelationship(stance))
 					return;
 
 				var gpbs = produced.TraitsImplementing<GivesProximityBounty>();
@@ -170,7 +170,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			var stance = self.Owner.RelationshipWith(a.Owner);
-			if (!Info.ValidStances.HasStance(stance))
+			if (!Info.ValidStances.HasRelationship(stance))
 				return;
 
 			var gpbs = a.TraitsImplementing<GivesProximityBounty>();

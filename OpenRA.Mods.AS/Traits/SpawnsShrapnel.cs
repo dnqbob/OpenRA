@@ -96,7 +96,7 @@ namespace OpenRA.Mods.AS.Traits
 			var availableTargetActors = world.FindActorsOnCircle(position, Info.WeaponInfo.Range)
 				.Where(x => (Info.AllowSelfHit || x != self)
 					&& Info.WeaponInfo.IsValidAgainst(Target.FromActor(x), world, self)
-					&& Info.AimTargetStances.HasStance(self.Owner.RelationshipWith(x.Owner)))
+					&& Info.AimTargetStances.HasRelationship(self.Owner.RelationshipWith(x.Owner)))
 				.Where(x =>
 				{
 					var activeShapes = x.TraitsImplementing<HitShape>().Where(Exts.IsTraitEnabled);

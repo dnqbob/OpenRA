@@ -111,7 +111,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			var stance = self.Owner.RelationshipWith(a.Owner);
-			if (!Info.ValidStances.HasStance(stance))
+			if (!Info.ValidStances.HasRelationship(stance))
 				return;
 
 			var external = a.TraitsImplementing<ExternalCondition>()
@@ -135,7 +135,7 @@ namespace OpenRA.Mods.AS.Traits
 			if ((produced.CenterPosition - self.CenterPosition + new WVec(WDist.Zero, WDist.Zero, self.World.Map.DistanceAboveTerrain(self.CenterPosition))).HorizontalLengthSquared <= Info.Range.LengthSquared)
 			{
 				var stance = self.Owner.RelationshipWith(produced.Owner);
-				if (!Info.ValidStances.HasStance(stance))
+				if (!Info.ValidStances.HasRelationship(stance))
 					return;
 
 				var external = produced.TraitsImplementing<ExternalCondition>()
