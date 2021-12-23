@@ -15,6 +15,7 @@ using OpenRA.Activities;
 using OpenRA.Graphics;
 using OpenRA.Mods.Common.Activities;
 using OpenRA.Mods.Common.Graphics;
+using OpenRA.Mods.Common.Terrain;
 using OpenRA.Primitives;
 using OpenRA.Traits;
 
@@ -643,5 +644,21 @@ namespace OpenRA.Mods.Common.Traits
 		bool RequiresSelection { get; }
 
 		IEnumerable<IRenderable> RenderDecoration(Actor self, WorldRenderer wr, ISelectionDecorations container);
+	}
+
+	[RequireExplicitImplementation]
+	public interface ITiledTerrainRendererInfo : ITraitInfoInterface
+	{
+		bool ValidateTileSprites(ITemplatedTerrainInfo terrainInfo, Action<string> onError);
+	}
+
+	[RequireExplicitImplementation]
+	public interface ITiledTerrainRenderer
+	{
+		Sheet Sheet { get; }
+		Sprite TileSprite(TerrainTile r, int? variant = null);
+		Rectangle TemplateBounds(TerrainTemplateInfo template);
+		IEnumerable<IRenderable> RenderUIPreview(WorldRenderer wr, TerrainTemplateInfo template, int2 origin, float scale);
+		IEnumerable<IRenderable> RenderPreview(WorldRenderer wr, TerrainTemplateInfo template, WPos origin);
 	}
 }

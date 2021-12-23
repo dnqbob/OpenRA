@@ -13,12 +13,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using OpenRA.Graphics;
 using OpenRA.Primitives;
 using OpenRA.Support;
 
-namespace OpenRA.Graphics
+namespace OpenRA.Mods.Common.Terrain
 {
-	class TheaterTemplate
+	public class TheaterTemplate
 	{
 		public readonly Sprite[] Sprites;
 		public readonly int Stride;
@@ -32,17 +33,15 @@ namespace OpenRA.Graphics
 		}
 	}
 
-	public sealed class Theater : IDisposable
+	public sealed class DefaultTileCache : IDisposable
 	{
 		readonly Dictionary<ushort, TheaterTemplate> templates = new Dictionary<ushort, TheaterTemplate>();
 		SheetBuilder sheetBuilder;
 		readonly Sprite missingTile;
 		readonly MersenneTwister random;
-		TileSet tileset;
 
-		public Theater(TileSet tileset, Action<uint, string> onMissingImage = null)
+		public DefaultTileCache(DefaultTerrain terrainInfo, Action<uint, string> onMissingImage = null)
 		{
-			this.tileset = tileset;
 			var allocated = false;
 
 			Func<Sheet> allocate = () =>
@@ -51,17 +50,18 @@ namespace OpenRA.Graphics
 					throw new SheetOverflowException("Terrain sheet overflow. Try increasing the tileset SheetSize parameter.");
 				allocated = true;
 
-				return new Sheet(SheetType.Indexed, new Size(tileset.SheetSize, tileset.SheetSize));
+				return new Sheet(SheetType.Indexed, new Size(terrainInfo.SheetSize, terrainInfo.SheetSize));
 			};
 
 			random = new MersenneTwister();
 
 			var frameCache = new FrameCache(Game.ModData.DefaultFileSystem, Game.ModData.SpriteLoaders);
-			foreach (var t in tileset.Templates)
+			foreach (var t in terrainInfo.Templates)
 			{
 				var variants = new List<Sprite[]>();
+				var templateInfo = (DefaultTerrainTemplateInfo)t.Value;
 
-				foreach (var i in t.Value.Images)
+				foreach (var i in templateInfo.Images)
 				{
 					ISpriteFrame[] allFrames;
 					if (onMissingImage != null)
@@ -79,8 +79,8 @@ namespace OpenRA.Graphics
 					else
 						allFrames = frameCache[i];
 
-					var frameCount = tileset.EnableDepth ? allFrames.Length / 2 : allFrames.Length;
-					var indices = t.Value.Frames != null ? t.Value.Frames : Exts.MakeArray(t.Value.TilesCount, j => j);
+					var frameCount = terrainInfo.EnableDepth ? allFrames.Length / 2 : allFrames.Length;
+					var indices = templateInfo.Frames != null ? templateInfo.Frames : Exts.MakeArray(t.Value.TilesCount, j => j);
 
 					var start = indices.Min();
 					var end = indices.Max();
@@ -91,7 +91,7 @@ namespace OpenRA.Graphics
 					variants.Add(indices.Select(j =>
 					{
 						var f = allFrames[j];
-						var tile = t.Value.Contains(j) ? t.Value[j] : null;
+						var tile = t.Value.Contains(j) ? (DefaultTerrainTileInfo)t.Value[j] : null;
 
 						// The internal z axis is inverted from expectation (negative is closer)
 						var zOffset = tile != null ? -tile.ZOffset : 0;
@@ -107,13 +107,13 @@ namespace OpenRA.Graphics
 							throw new YamlException("Sprite type mismatch. Terrain sprites must all be either Indexed or RGBA.");
 
 						var s = sheetBuilder.Allocate(f.Size, zRamp, offset);
-						Util.FastCopyIntoChannel(s, f.Data, f.Type);
+						OpenRA.Graphics.Util.FastCopyIntoChannel(s, f.Data, f.Type);
 
-						if (tileset.EnableDepth)
+						if (terrainInfo.EnableDepth)
 						{
-							var ss = sheetBuilder.Allocate(f.Size, zRamp, offset);
 							var depthFrame = allFrames[j + frameCount];
-							Util.FastCopyIntoChannel(ss, depthFrame.Data, depthFrame.Type);
+							var ss = sheetBuilder.Allocate(f.Size, zRamp, offset);
+							OpenRA.Graphics.Util.FastCopyIntoChannel(ss, depthFrame.Data, depthFrame.Type);
 
 							// s and ss are guaranteed to use the same sheet
 							// because of the custom terrain sheet allocation
@@ -127,13 +127,13 @@ namespace OpenRA.Graphics
 				var allSprites = variants.SelectMany(s => s);
 
 				// Ignore the offsets baked into R8 sprites
-				if (tileset.IgnoreTileSpriteOffsets)
+				if (terrainInfo.IgnoreTileSpriteOffsets)
 					allSprites = allSprites.Select(s => new Sprite(s.Sheet, s.Bounds, s.ZRamp, new float3(float2.Zero, s.Offset.Z), s.Channel, s.BlendMode));
 
 				if (onMissingImage != null && !variants.Any())
 					continue;
 
-				templates.Add(t.Value.Id, new TheaterTemplate(allSprites.ToArray(), variants.First().Count(), t.Value.Images.Length));
+				templates.Add(t.Value.Id, new TheaterTemplate(allSprites.ToArray(), variants.First().Count(), templateInfo.Images.Length));
 			}
 
 			// 1x1px transparent tile
@@ -160,32 +160,6 @@ namespace OpenRA.Graphics
 
 			var start = template.Variants > 1 ? variant.HasValue ? variant.Value : random.Next(template.Variants) : 0;
 			return template.Sprites[start * template.Stride + r.Index];
-		}
-
-		public Rectangle TemplateBounds(TerrainTemplateInfo template, Size tileSize, MapGridType mapGrid)
-		{
-			Rectangle? templateRect = null;
-
-			var i = 0;
-			for (var y = 0; y < template.Size.Y; y++)
-			{
-				for (var x = 0; x < template.Size.X; x++)
-				{
-					var tile = new TerrainTile(template.Id, (byte)(i++));
-					if (!tileset.TryGetTileInfo(tile, out var tileInfo))
-						continue;
-
-					var sprite = TileSprite(tile);
-					var u = mapGrid == MapGridType.Rectangular ? x : (x - y) / 2f;
-					var v = mapGrid == MapGridType.Rectangular ? y : (x + y) / 2f;
-
-					var tl = new float2(u * tileSize.Width, (v - 0.5f * tileInfo.Height) * tileSize.Height) - 0.5f * sprite.Size;
-					var rect = new Rectangle((int)(tl.X + sprite.Offset.X), (int)(tl.Y + sprite.Offset.Y), (int)sprite.Size.X, (int)sprite.Size.Y);
-					templateRect = templateRect.HasValue ? Rectangle.Union(templateRect.Value, rect) : rect;
-				}
-			}
-
-			return templateRect.HasValue ? templateRect.Value : Rectangle.Empty;
 		}
 
 		public Sheet Sheet { get { return sheetBuilder.Current; } }
