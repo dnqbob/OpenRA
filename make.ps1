@@ -29,9 +29,8 @@ function Clean-Command
 	}
 
 	dotnet clean /nologo
-	rm ./bin -r
-	rm ./*/bin -r
-	rm ./*/obj -r
+	Remove-Item ./bin -Recurse -ErrorAction Ignore
+	Remove-Item ./*/obj -Recurse -ErrorAction Ignore
 	Write-Host "Clean complete." -ForegroundColor Green
 }
 
@@ -145,20 +144,6 @@ function Check-Scripts-Command
 	}
 }
 
-function Docs-Command
-{
-	if ((CheckForUtility) -eq 1)
-	{
-		return
-	}
-
-	./make.ps1 version
-	Invoke-Expression "$utilityPath all --docs" | Out-File -Encoding "UTF8" DOCUMENTATION.md
-	Invoke-Expression "$utilityPath all --weapon-docs" | Out-File -Encoding "UTF8" WEAPONS.md
-	Invoke-Expression "$utilityPath all --lua-docs" | Out-File -Encoding "UTF8" Lua-API.md
-	Invoke-Expression "$utilityPath all --settings-docs" | Out-File -Encoding "UTF8" Settings.md
-}
-
 function CheckForUtility
 {
 	if (Test-Path $utilityPath)
@@ -230,7 +215,6 @@ if ($args.Length -eq 0)
 	Write-Host "  test, t             Tests the default mods for errors."
 	Write-Host "  check, ck           Checks .cs files for StyleCop violations."
 	Write-Host "  check-scripts, cs   Checks .lua files for syntax errors."
-	Write-Host "  docs                Generates the trait and Lua API documentation."
 	Write-Host ""
 	$command = (Read-Host "Enter command").Split(' ', 2)
 }
@@ -256,7 +240,6 @@ switch ($execute)
 	{"test",          "t"  -contains $_} { Test-Command }
 	{"check",         "ck" -contains $_} { Check-Command }
 	{"check-scripts", "cs" -contains $_} { Check-Scripts-Command }
-	 "docs"                              { Docs-Command }
 	Default { Write-Host ("Invalid command '{0}'" -f $command) }
 }
 
