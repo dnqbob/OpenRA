@@ -133,6 +133,7 @@ GAPILE:
 		Palette: mouse
 		IsPlayerPalette: false
 		LineWidth: 2
+		ForceSetType: Infantry
 	Exit@1:
 		SpawnOffset: -512,768,0
 		ExitCell: 1,2
@@ -226,6 +227,7 @@ GAWEAP:
 		Palette: mouse
 		IsPlayerPalette: false
 		LineWidth: 2
+		ForceSetType: Vehicle
 	Exit@1:
 		SpawnOffset: -384,-384,0
 		ExitCell: 3,1
@@ -262,9 +264,6 @@ GAWEAP:
 	WithIdleOverlay@TURBINES:
 		RequiresCondition: !build-incomplete
 		Sequence: idle-turbines
-	WithIdleOverlay@BIB:
-		RequiresCondition: !build-incomplete
-		Sequence: bib
 	WithMakeOverlay@MAKE-BRIGHT:
 		Sequence: make-bright
 		Palette: bright
@@ -303,6 +302,7 @@ GAHPAD:
 		Palette: mouse
 		IsPlayerPalette: false
 		LineWidth: 2
+		ForceSetType: Air
 	Production:
 		Produces: Air
 		PauseOnCondition: empdisable

@@ -124,6 +124,15 @@ namespace OpenRA.Platforms.Default
 		[DllImport("user32.dll")]
 		static extern bool SetProcessDPIAware();
 
+		[DllImport("libX11")]
+		static extern IntPtr XInternAtom(IntPtr display, string atom_name, bool only_if_exists);
+
+		[DllImport("libX11", CharSet=CharSet.Ansi)]
+		static extern int XChangeProperty(IntPtr display, IntPtr window, IntPtr property, IntPtr type, int format, IntPtr mode, string data, int elements);
+
+		[DllImport("libX11")]
+		static extern IntPtr XFlush(IntPtr display);
+
 		public Sdl2PlatformWindow(Size requestEffectiveWindowSize, WindowMode windowMode,
 			float scaleModifier, int batchSize, int videoDisplay, GLProfile requestProfile, bool enableLegacyGL)
 		{
@@ -218,10 +227,10 @@ namespace OpenRA.Platforms.Default
 				window = SDL.SDL_CreateWindow("OpenRA", SDL.SDL_WINDOWPOS_CENTERED_DISPLAY(videoDisplay), SDL.SDL_WINDOWPOS_CENTERED_DISPLAY(videoDisplay),
 					windowSize.Width, windowSize.Height, windowFlags);
 
-				// Work around an issue in macOS's GL backend where the window remains permanently black
-				// (if dark mode is enabled) unless we drain the event queue before initializing GL
 				if (Platform.CurrentPlatform == PlatformType.OSX)
 				{
+					// Work around an issue in macOS's GL backend where the window remains permanently black
+					// (if dark mode is enabled) unless we drain the event queue before initializing GL
 					while (SDL.SDL_PollEvent(out var e) != 0)
 					{
 						// We can safely ignore all mouse/keyboard events and window size changes
@@ -238,6 +247,35 @@ namespace OpenRA.Platforms.Default
 									HasInputFocus = true;
 									break;
 							}
+						}
+					}
+				}
+				else if (Platform.CurrentPlatform == PlatformType.Linux)
+				{
+					// The KDE task switcher limits itself to the 128px icon unless we
+					// set an X11 _KDE_NET_WM_DESKTOP_FILE property on the window
+					var currentDesktop = Environment.GetEnvironmentVariable("XDG_CURRENT_DESKTOP");
+					var desktopFilename = Environment.GetEnvironmentVariable("OPENRA_DESKTOP_FILENAME");
+					if (desktopFilename != null && currentDesktop == "KDE")
+					{
+						try
+						{
+							var info = default(SDL.SDL_SysWMinfo);
+							SDL.SDL_VERSION(out info.version);
+							SDL.SDL_GetWindowWMInfo(Window, ref info);
+
+							var d = info.info.x11.display;
+							var w = info.info.x11.window;
+							var property = XInternAtom(d, "_KDE_NET_WM_DESKTOP_FILE", false);
+							var type = XInternAtom(d, "UTF8_STRING", false);
+
+							XChangeProperty(d, w, property, type, 8, IntPtr.Zero, desktopFilename, desktopFilename.Length + 1);
+							XFlush(d);
+						}
+						catch
+						{
+							Log.Write("debug", "Failed to set _KDE_NET_WM_DESKTOP_FILE");
+							Console.WriteLine("Failed to set _KDE_NET_WM_DESKTOP_FILE");
 						}
 					}
 				}
@@ -288,9 +326,8 @@ namespace OpenRA.Platforms.Default
 			// Run graphics rendering on a dedicated thread.
 			// The calling thread will then have more time to process other tasks, since rendering happens in parallel.
 			// If the calling thread is the main game thread, this means it can run more logic and render ticks.
-			// This is disabled on Windows because it breaks the ability to minimize/restore the window from the taskbar for reasons that we dont understand.
-			var threadedRenderer = Platform.CurrentPlatform != PlatformType.Windows || !Game.Settings.Graphics.DisableWindowsRenderThread;
-			if (!threadedRenderer)
+			// This is disabled when running in windowed mode on Windows because it breaks the ability to minimize/restore the window.
+			if (Platform.CurrentPlatform == PlatformType.Windows && windowMode == WindowMode.Windowed)
 			{
 				var ctx = new Sdl2GraphicsContext(this);
 				ctx.InitializeOpenGL();
@@ -345,11 +382,14 @@ namespace OpenRA.Platforms.Default
 					hotspot *= 2;
 				}
 
-				return new Sdl2HardwareCursor(size, data, hotspot);
+				var cursor = new Sdl2HardwareCursor(size, data, hotspot);
+				return cursor.Cursor == IntPtr.Zero ? null : cursor;
 			}
 			catch (Exception ex)
 			{
-				throw new Sdl2HardwareCursorException($"Failed to create hardware cursor `{name}` - {ex.Message}", ex);
+				Log.Write("debug", $"Failed to create hardware cursor `{name}` - {ex.Message}");
+				Console.WriteLine($"Failed to create hardware cursor `{name}` - {ex.Message}");
+				return null;
 			}
 		}
 

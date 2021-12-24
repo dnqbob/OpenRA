@@ -132,7 +132,7 @@ ChromeLayout:
 	common|chrome/ingame-chat.yaml
 	common|chrome/ingame-fmvplayer.yaml
 	common|chrome/ingame-menu.yaml
-	ts|chrome/ingame-info.yaml
+	common|chrome/ingame-info.yaml
 	common|chrome/ingame-infoscripterror.yaml
 	common|chrome/ingame-infobriefing.yaml
 	common|chrome/ingame-infoobjectives.yaml
@@ -150,7 +150,7 @@ ChromeLayout:
 	common|chrome/settings-display.yaml
 	common|chrome/settings-audio.yaml
 	common|chrome/settings-input.yaml
-	common|chrome/settings-hotkeys.yaml
+	ts|chrome/settings-hotkeys.yaml
 	common|chrome/settings-advanced.yaml
 	common|chrome/credits.yaml
 	common|chrome/lobby.yaml
