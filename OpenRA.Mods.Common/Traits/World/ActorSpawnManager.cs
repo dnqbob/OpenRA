@@ -9,6 +9,7 @@
  */
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using OpenRA.Primitives;
@@ -32,7 +33,7 @@ namespace OpenRA.Mods.Common.Traits
 		[FieldLoader.Require]
 		[ActorReference]
 		[Desc("Name of the actor that will be randomly picked to spawn.")]
-		public readonly string[] Actors = { };
+		public readonly string[] Actors = Array.Empty<string>();
 
 		public readonly string Owner = "Creeps";
 
@@ -53,7 +54,7 @@ namespace OpenRA.Mods.Common.Traits
 				throw new YamlException($"{nameof(ActorSpawnManager)}.{nameof(SpawnInterval)}'s value(s) must not be less than 0");
 		}
 
-		public override object Create(ActorInitializer init) { return new ActorSpawnManager(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new ActorSpawnManager(this); }
 	}
 
 	public class ActorSpawnManager : ConditionalTrait<ActorSpawnManagerInfo>, ITick
@@ -64,7 +65,7 @@ namespace OpenRA.Mods.Common.Traits
 		int spawnCountdown;
 		int actorsPresent;
 
-		public ActorSpawnManager(Actor self, ActorSpawnManagerInfo info)
+		public ActorSpawnManager(ActorSpawnManagerInfo info)
 			: base(info)
 		{
 			this.info = info;

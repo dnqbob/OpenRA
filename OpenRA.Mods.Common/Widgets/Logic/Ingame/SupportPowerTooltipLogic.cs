@@ -66,10 +66,10 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				costLabel.Visible = cost != 0;
 				var costSize = costFont.Measure(costString);
 
-				nameLabel.Text = sp.Info.Description;
+				nameLabel.Text = sp.Info.Name;
 				var nameSize = nameFont.Measure(nameLabel.Text);
 
-				descLabel.Text = sp.Info.LongDesc.Replace("\\n", "\n");
+				descLabel.Text = sp.Info.Description.Replace("\\n", "\n");
 				var descSize = descFont.Measure(descLabel.Text);
 
 				var customLabel = sp.TooltipTimeTextOverride();
