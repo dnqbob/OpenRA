@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2020 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -28,12 +28,8 @@ namespace OpenRA.Network
 		public Session.Client LocalClient => LobbyInfo.ClientWithIndex(Connection.LocalClientId);
 		public World World;
 
-		public readonly ConnectionTarget Endpoint;
-		public readonly string Password = "";
-
 		public string ServerError = null;
 		public bool AuthenticationFailed = false;
-		public ExternalMod ServerExternalMod = null;
 
 		public int NetFrameNumber { get; private set; }
 		public int LocalFrameNumber;
@@ -94,10 +90,8 @@ namespace OpenRA.Network
 					Connection.Send(i, new List<byte[]>());
 		}
 
-		public OrderManager(ConnectionTarget endpoint, string password, IConnection conn)
+		public OrderManager(IConnection conn)
 		{
-			Endpoint = endpoint;
-			Password = password;
 			Connection = conn;
 			syncReport = new SyncReport(this);
 			AddChatLine += CacheChatLine;

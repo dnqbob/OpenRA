@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2020 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -192,7 +192,7 @@ namespace OpenRA.Network
 							Game.ExternalMods.TryGetValue(externalKey, out var external))
 						{
 							// The ConnectionFailedLogic will prompt the user to switch mods
-							orderManager.ServerExternalMod = external;
+							CurrentServerSettings.ServerExternalMod = external;
 							orderManager.Connection.Dispose();
 							break;
 						}
@@ -218,7 +218,7 @@ namespace OpenRA.Network
 							Client = info,
 							Mod = mod.Id,
 							Version = mod.Metadata.Version,
-							Password = orderManager.Password,
+							Password = CurrentServerSettings.Password,
 							Fingerprint = localProfile.Fingerprint,
 							OrdersProtocol = ProtocolVersion.Orders
 						};

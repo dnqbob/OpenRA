@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2020 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -32,15 +32,13 @@ namespace OpenRA.Network
 	{
 		int LocalClientId { get; }
 		ConnectionState ConnectionState { get; }
-		IPEndPoint EndPoint { get; }
-		string ErrorMessage { get; }
 		void Send(int frame, List<byte[]> orders);
 		void SendImmediate(IEnumerable<byte[]> orders);
 		void SendSync(int frame, byte[] syncData);
 		void Receive(Action<int, byte[]> packetFn);
 	}
 
-	class EchoConnection : IConnection
+	public class EchoConnection : IConnection
 	{
 		protected struct ReceivedPacket
 		{
@@ -54,10 +52,6 @@ namespace OpenRA.Network
 		public virtual int LocalClientId => 1;
 
 		public virtual ConnectionState ConnectionState => ConnectionState.PreConnecting;
-
-		public virtual IPEndPoint EndPoint => throw new NotSupportedException("An echo connection doesn't have an endpoint");
-
-		public virtual string ErrorMessage => null;
 
 		public virtual void Send(int frame, List<byte[]> orders)
 		{
@@ -136,9 +130,9 @@ namespace OpenRA.Network
 		}
 	}
 
-	sealed class NetworkConnection : EchoConnection
+	public sealed class NetworkConnection : EchoConnection
 	{
-		readonly ConnectionTarget target;
+		public readonly ConnectionTarget Target;
 		TcpClient tcp;
 		IPEndPoint endpoint;
 		readonly List<byte[]> queuedSyncPackets = new List<byte[]>();
@@ -147,13 +141,13 @@ namespace OpenRA.Network
 		bool disposed;
 		string errorMessage;
 
-		public override IPEndPoint EndPoint => endpoint;
+		public IPEndPoint EndPoint => endpoint;
 
-		public override string ErrorMessage => errorMessage;
+		public string ErrorMessage => errorMessage;
 
 		public NetworkConnection(ConnectionTarget target)
 		{
-			this.target = target;
+			Target = target;
 			new Thread(NetworkConnectionConnect)
 			{
 				Name = $"{GetType().Name} (connect to {target})",
@@ -166,7 +160,7 @@ namespace OpenRA.Network
 			var queue = new BlockingCollection<TcpClient>();
 
 			var atLeastOneEndpoint = false;
-			foreach (var endpoint in target.GetConnectEndPoints())
+			foreach (var endpoint in Target.GetConnectEndPoints())
 			{
 				atLeastOneEndpoint = true;
 				new Thread(() =>
