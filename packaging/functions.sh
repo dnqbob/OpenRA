@@ -15,6 +15,7 @@
 #   COPY_GENERIC_LAUNCHER: If set to True the OpenRA.exe will also be copied (True, False)
 #   COPY_CNC_DLL: If set to True the OpenRA.Mods.Cnc.dll will also be copied (True, False)
 #   COPY_D2K_DLL: If set to True the OpenRA.Mods.D2k.dll will also be copied (True, False)
+#   COPY_AS_DLL: If set to True the OpenRA.Mods.AS.dll will also be copied (True, False)
 # Used by:
 #   Makefile (install target for local installs and downstream packaging)
 #   Windows packaging
@@ -31,6 +32,7 @@ install_assemblies() {
 	COPY_GENERIC_LAUNCHER="${5}"
 	COPY_CNC_DLL="${6}"
 	COPY_D2K_DLL="${7}"
+	COPY_AS_DLL="${8}"
 
 	ORIG_PWD=$(pwd)
 	cd "${SRC_PATH}" || exit 1
@@ -57,6 +59,10 @@ install_assemblies() {
 			rm "${SRC_PATH}/bin/OpenRA.Mods.D2k.dll"
 		fi
 
+		if [ "${COPY_AS_DLL}" != "True" ]; then
+			rm "${SRC_PATH}/bin/OpenRA.Mods.AS.dll"
+		fi
+
 		cd "${ORIG_PWD}" || exit 1
 
 		echo "Installing engine to ${DEST_PATH}"
@@ -78,7 +84,7 @@ install_assemblies() {
 			done
 		fi
 	else
-		dotnet publish -c Release -p:TargetPlatform="${TARGETPLATFORM}" -p:PublishTrimmed=true -p:CopyGenericLauncher="${COPY_GENERIC_LAUNCHER}" -p:CopyCncDll="${COPY_CNC_DLL}" -p:CopyD2kDll="${COPY_D2K_DLL}" -r "${TARGETPLATFORM}" -o "${DEST_PATH}" --self-contained true
+		dotnet publish -c Release -p:TargetPlatform="${TARGETPLATFORM}" -p:PublishTrimmed=true -p:CopyGenericLauncher="${COPY_GENERIC_LAUNCHER}" -p:CopyCncDll="${COPY_CNC_DLL}" -p:CopyD2kDll="${COPY_D2K_DLL}" -p:CopyASDll="${COPY_AS_DLL}" -r "${TARGETPLATFORM}" -o "${DEST_PATH}" --self-contained true
 	fi
 	cd "${ORIG_PWD}" || exit 1
 }
