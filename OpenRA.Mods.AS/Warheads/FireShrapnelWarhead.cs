@@ -137,13 +137,13 @@ namespace OpenRA.Mods.AS.Warheads
 					CurrentMuzzleFacing = () => shrapnelFacing,
 
 					DamageModifiers = !firedBy.IsDead ? firedBy.TraitsImplementing<IFirepowerModifier>()
-						.Select(a => a.GetFirepowerModifier()).ToArray() : new int[0],
+						.Select(a => a.GetFirepowerModifier()).ToArray() : System.Array.Empty<int>(),
 
 					InaccuracyModifiers = !firedBy.IsDead ? firedBy.TraitsImplementing<IInaccuracyModifier>()
-						.Select(a => a.GetInaccuracyModifier()).ToArray() : new int[0],
+						.Select(a => a.GetInaccuracyModifier()).ToArray() : System.Array.Empty<int>(),
 
 					RangeModifiers = !firedBy.IsDead ? firedBy.TraitsImplementing<IRangeModifier>()
-						.Select(a => a.GetRangeModifier()).ToArray() : new int[0],
+						.Select(a => a.GetRangeModifier()).ToArray() : System.Array.Empty<int>(),
 
 					Source = target.CenterPosition,
 					CurrentSource = () => centerPosition,

@@ -50,6 +50,7 @@ namespace OpenRA.Mods.AS.Traits
 	{
 		readonly Actor self;
 		readonly HordeBonusInfo info;
+		readonly HashSet<Actor> sources;
 
 		int proximityTrigger;
 		WPos cachedPosition;
@@ -59,8 +60,6 @@ namespace OpenRA.Mods.AS.Traits
 		WDist desiredVRange;
 
 		bool cachedDisabled = true;
-
-		HashSet<Actor> sources;
 
 		int token = Actor.InvalidConditionToken;
 
@@ -156,7 +155,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void UpdateConditionState()
 		{
-			if (sources.Count() > info.Minimum && sources.Count() < info.Maximum)
+			if (sources.Count > info.Minimum && sources.Count < info.Maximum)
 			{
 				if (!IsEnabled)
 				{
