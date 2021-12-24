@@ -278,6 +278,14 @@ namespace OpenRA.Mods.AS.UtilityCommands
 			{ "catech01", "capad" }
 		};
 
+		static readonly string[] CreepActors = { "DOGGIE", "VISC_SML", "VISC_LRG", "JFISH" };
+
+		static readonly string[] LampActors =
+		{
+			"GALITE", "INGALITE", "NEGLAMP", "REDLAMP", "NEGRED", "GRENLAMP", "BLUELAMP", "YELWLAMP",
+			"INYELWLAMP", "PURPLAMP", "INPURPLAMP", "INORANLAMP", "INGRNLMP", "INREDLMP", "INBLULMP"
+		};
+
 		[Desc("FILENAME", "AUTHOR (optional, defaults to Westwood Studios)", "Convert an Attacque Supérior/Valiant Shades map to the OpenRA format.")]
 		void IUtilityCommand.Run(Utility utility, string[] args)
 		{
@@ -316,6 +324,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 			ReadWaypoints(map, file, fullSize);
 			ReadOverlay(map, file, fullSize);
 			ReadLighting(map, file);
+			ReadLamps(map, file);
 
 			var spawnCount = map.ActorDefinitions.Count(n => n.Value.Value == "mpspawn");
 			var mapPlayers = new MapPlayers(map.Rules, spawnCount);
@@ -580,7 +589,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 				var health = short.Parse(entries[2]);
 				var rx = int.Parse(entries[3]);
 				var ry = int.Parse(entries[4]);
-				var facing = (byte)(byte.Parse(entries[5]) + 96);
+				var facing = (byte)(224 - byte.Parse(entries[type == "Infantry" ? 7 : 5]));
 
 				var dx = rx - ry + fullSize.X - 1;
 				var dy = rx + ry - fullSize.X - 1;
@@ -589,10 +598,27 @@ namespace OpenRA.Mods.AS.UtilityCommands
 				var ar = new ActorReference(name)
 				{
 					new LocationInit(cell),
-					new OwnerInit("Neutral"),
-					new HealthInit(100 * health / 256),
-					new FacingInit(WAngle.FromFacing(facing)),
+					new OwnerInit(CreepActors.Contains(entries[1]) ? "Creeps" : "Neutral")
 				};
+
+				if (type == "Infantry")
+				{
+					var subcell = 0;
+					switch (byte.Parse(entries[5]))
+					{
+						case 2: subcell = 3; break;
+						case 3: subcell = 1; break;
+						case 4: subcell = 2; break;
+					}
+
+					if (subcell != 0)
+						ar.Add(new SubCellInit((SubCell)subcell));
+				}
+
+				if (health != 256)
+					ar.Add(new HealthInit(100 * health / 256));
+
+				ar.Add(new FacingInit(WAngle.FromFacing(facing)));
 
 				if (isDeployed)
 					ar.Add(new DeployStateInit(DeployState.Deployed));
@@ -606,28 +632,90 @@ namespace OpenRA.Mods.AS.UtilityCommands
 
 		static void ReadLighting(Map map, IniFile file)
 		{
-			var lightingTypes = new[] { "Red", "Green", "Blue", "Ambient" };
+			var lightingTypes = new Dictionary<string, string>()
+			{
+				{ "Red", "RedTint" },
+				{ "Green", "GreenTint" },
+				{ "Blue", "BlueTint" },
+				{ "Ambient", "Intensity" },
+				{ "Level", "HeightStep" },
+				{ "Ground", null }
+			};
+
 			var lightingSection = file.GetSection("Lighting");
+			var parsed = new Dictionary<string, float>();
 			var lightingNodes = new List<MiniYamlNode>();
 
 			foreach (var kv in lightingSection)
 			{
-				if (lightingTypes.Contains(kv.Key))
-				{
-					var val = FieldLoader.GetValue<float>(kv.Key, kv.Value);
-					if (val != 1.0f)
-						lightingNodes.Add(new MiniYamlNode(kv.Key, FieldSaver.FormatValue(val)));
-				}
+				if (lightingTypes.ContainsKey(kv.Key))
+					parsed[kv.Key] = FieldLoader.GetValue<float>(kv.Key, kv.Value);
 				else
-					Console.WriteLine("Ignoring unknown lighting type: `{0}`".F(kv.Key));
+					Console.WriteLine($"Ignoring unknown lighting type: `{kv.Key}`");
+			}
+
+			// Merge Ground into Ambient
+			float ground = 0;
+			if (parsed.TryGetValue("Ground", out ground))
+			{
+				if (!parsed.ContainsKey("Ambient"))
+					parsed["Ambient"] = 1f;
+				parsed["Ambient"] -= ground;
+			}
+
+			foreach (var node in lightingTypes)
+			{
+				if (node.Value != null && parsed.TryGetValue(node.Key, out var val) && ((node.Key == "Level" && val != 0) || (node.Key != "Level" && val != 1.0f)))
+					lightingNodes.Add(new MiniYamlNode(node.Value, FieldSaver.FormatValue(val)));
 			}
 
 			if (lightingNodes.Any())
 			{
-				map.RuleDefinitions.Nodes.Add(new MiniYamlNode("World", new MiniYaml("", new List<MiniYamlNode>()
+				map.RuleDefinitions.Nodes.Add(new MiniYamlNode("^BaseWorld", new MiniYaml("", new List<MiniYamlNode>()
 				{
-					new MiniYamlNode("GlobalLightingPaletteEffect", new MiniYaml("", lightingNodes))
+					new MiniYamlNode("TerrainLighting", new MiniYaml("", lightingNodes))
 				})));
+			}
+		}
+
+		static void ReadLamps(Map map, IniFile file)
+		{
+			var lightingTypes = new Dictionary<string, string>()
+			{
+				{ "LightIntensity", "Intensity" },
+				{ "LightRedTint", "RedTint" },
+				{ "LightGreenTint", "GreenTint" },
+				{ "LightBlueTint", "BlueTint" },
+			};
+
+			foreach (var lamp in LampActors)
+			{
+				var lightingSection = file.GetSection(lamp, true);
+				var lightingNodes = new List<MiniYamlNode>();
+
+				foreach (var kv in lightingSection)
+				{
+					if (kv.Key == "LightVisibility")
+					{
+						// Convert leptons to WDist
+						var visibility = FieldLoader.GetValue<int>(kv.Key, kv.Value);
+						lightingNodes.Add(new MiniYamlNode("Range", FieldSaver.FormatValue(new WDist(visibility * 4))));
+					}
+					else if (lightingTypes.ContainsKey(kv.Key))
+					{
+						// Some maps use "," instead of "."!
+						var value = FieldLoader.GetValue<float>(kv.Key, kv.Value.Replace(',', '.'));
+						lightingNodes.Add(new MiniYamlNode(lightingTypes[kv.Key], FieldSaver.FormatValue(value)));
+					}
+				}
+
+				if (lightingNodes.Any())
+				{
+					map.RuleDefinitions.Nodes.Add(new MiniYamlNode(lamp, new MiniYaml("", new List<MiniYamlNode>()
+					{
+						new MiniYamlNode("TerrainLightSource", new MiniYaml("", lightingNodes))
+					})));
+				}
 			}
 		}
 	}
