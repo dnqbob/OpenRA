@@ -75,9 +75,7 @@ namespace OpenRA.Mods.AS.Activities
 
 		void PrepareStatusHandle()
 		{
-			if (ticks < bmInfo.PrepareTick)
-				bm.Pitch += preparePitchIncrement;
-			else
+			if (ticks >= bmInfo.PrepareTick)
 			{
 				if (bmInfo.WithoutCruise)
 				{
@@ -93,6 +91,8 @@ namespace OpenRA.Mods.AS.Activities
 
 				status = BMFlyStatus.Launch;
 			}
+
+			bm.Pitch += preparePitchIncrement;
 		}
 
 		void LaunchStatusHandle(Actor self)
@@ -197,11 +197,14 @@ namespace OpenRA.Mods.AS.Activities
 		void LazyCurveHandle(Actor self)
 		{
 			var pos = WPos.LerpQuadratic(initPos, targetPos, bm.Info.LaunchAngle, lazyCurveTick, lazyCurveLength);
-			bm.Pitch = (pos - bm.CenterPosition).Pitch;
+
+			if (lazyCurveTick != 0)
+				bm.Pitch = (pos - bm.CenterPosition).Pitch;
+
 			bm.SetPosition(self, pos);
 			lazyCurveTick++;
 			if ((targetPos - bm.CenterPosition).Length < bmInfo.ExplosionRange.Length)
-			status = BMFlyStatus.Unknown;
+				status = BMFlyStatus.Unknown;
 		}
 
 		public override bool Tick(Actor self)
