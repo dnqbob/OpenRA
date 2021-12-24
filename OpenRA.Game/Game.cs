@@ -474,11 +474,6 @@ namespace OpenRA
 
 			JoinLocal();
 
-			ChromeMetrics.TryGet("ChatMessageColor", out chatMessageColor);
-			ChromeMetrics.TryGet("SystemMessageColor", out systemMessageColor);
-			if (!ChromeMetrics.TryGet("SystemMessageLabel", out systemMessageLabel))
-				systemMessageLabel = "Battlefield Control";
-
 			ModData.LoadScreen.StartGame(args);
 		}
 
@@ -490,6 +485,20 @@ namespace OpenRA
 		public static void LoadShellMap()
 		{
 			var shellmap = ChooseShellmap();
+
+			// Add a spectator client for the local player,
+			// who is controlling the map via scripted orders
+			OrderManager.LobbyInfo.Clients.Add(new Session.Client
+			{
+				Index = OrderManager.Connection.LocalClientId,
+				Name = Settings.Player.Name,
+				PreferredColor = Settings.Player.Color,
+				Color = Settings.Player.Color,
+				Faction = "Random",
+				SpawnPoint = 0,
+				Team = 0,
+				State = Session.ClientState.Ready
+			});
 
 			using (new PerfTimer("StartGame"))
 			{
@@ -545,9 +554,6 @@ namespace OpenRA
 		// Note: These delayed actions should only be used by widgets or disposing objects
 		// - things that depend on a particular world should be queuing them on the world actor.
 		static volatile ActionQueue delayedActions = new ActionQueue();
-		static Color systemMessageColor = Color.White;
-		static Color chatMessageColor = Color.White;
-		static string systemMessageLabel;
 
 		public static void RunAfterTick(Action a) { delayedActions.Add(a, RunTime); }
 		public static void RunAfterDelay(int delayMilliseconds, Action a) { delayedActions.Add(a, RunTime + delayMilliseconds); }
@@ -565,7 +571,7 @@ namespace OpenRA
 				Log.Write("debug", "Taking screenshot " + path);
 
 				Renderer.SaveScreenshot(path);
-				Debug("Saved screenshot " + filename);
+				TextNotificationsManager.Debug("Saved screenshot " + filename);
 			}
 		}
 
@@ -895,26 +901,6 @@ namespace OpenRA
 		public static void Exit()
 		{
 			state = RunStatus.Success;
-		}
-
-		public static void AddSystemLine(string text)
-		{
-			AddSystemLine(systemMessageLabel, text);
-		}
-
-		public static void AddSystemLine(string name, string text)
-		{
-			OrderManager.AddChatLine(name, systemMessageColor, text, systemMessageColor);
-		}
-
-		public static void AddChatLine(string name, Color nameColor, string text)
-		{
-			OrderManager.AddChatLine(name, nameColor, text, chatMessageColor);
-		}
-
-		public static void Debug(string s, params object[] args)
-		{
-			AddSystemLine("Debug", string.Format(s, args));
 		}
 
 		public static void Disconnect()

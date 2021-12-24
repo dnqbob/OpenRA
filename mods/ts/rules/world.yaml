@@ -157,7 +157,7 @@
 			Veins: 100
 	Locomotor@VISCEROID:
 		Name: visceroid
-		Crushes: crate, infantry
+		Crushes: infantry
 		TerrainSpeeds:
 			Clear: 90
 			Road: 100
@@ -412,3 +412,7 @@ EditorWorld:
 		FootprintAlpha: 0.7
 	LoadWidgetAtGameStart:
 	EditorActionManager:
+	BuildableTerrainOverlay:
+		AllowedTerrainTypes: Clear, Rough, Road, DirtRoad, Green, Sand, Pavement
+		Palette: ra
+		Alpha: 0.35
