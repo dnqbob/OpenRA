@@ -46,9 +46,9 @@ namespace OpenRA.Network
 		readonly List<Order> localOrders = new List<Order>();
 		readonly List<Order> localImmediateOrders = new List<Order>();
 
-		readonly List<ChatLine> chatCache = new List<ChatLine>();
+		readonly List<TextNotification> notificationsCache = new List<TextNotification>();
 
-		public IReadOnlyList<ChatLine> ChatCache => chatCache;
+		public IReadOnlyList<TextNotification> NotificationsCache => notificationsCache;
 
 		bool disposed;
 		bool generateSyncReport = false;
@@ -94,7 +94,7 @@ namespace OpenRA.Network
 		{
 			Connection = conn;
 			syncReport = new SyncReport(this);
-			AddChatLine += CacheChatLine;
+			AddTextNotification += CacheTextNotification;
 		}
 
 		public void IssueOrders(Order[] orders)
@@ -111,10 +111,10 @@ namespace OpenRA.Network
 				localOrders.Add(order);
 		}
 
-		public Action<string, Color, string, Color> AddChatLine = (n, nc, s, tc) => { };
-		void CacheChatLine(string name, Color nameColor, string text, Color textColor)
+		public Action<TextNotification> AddTextNotification = (notification) => { };
+		void CacheTextNotification(TextNotification notification)
 		{
-			chatCache.Add(new ChatLine(name, nameColor, text, textColor));
+			notificationsCache.Add(notification);
 		}
 
 		public void TickImmediate()
@@ -131,8 +131,10 @@ namespace OpenRA.Network
 						return;
 
 					var frame = BitConverter.ToInt32(packet, 0);
-					if (packet.Length == 5 && packet[4] == (byte)OrderType.Disconnect)
-						pendingPackets.Remove(clientId);
+					if (packet.Length == Order.DisconnectOrderLength + 4 && packet[4] == (byte)OrderType.Disconnect)
+					{
+						pendingPackets.Remove(BitConverter.ToInt32(packet, 5));
+					}
 					else if (packet.Length > 4 && packet[4] == (byte)OrderType.SyncHash)
 					{
 						if (packet.Length != 4 + Order.SyncHashOrderLength)
@@ -238,22 +240,6 @@ namespace OpenRA.Network
 		{
 			disposed = true;
 			Connection?.Dispose();
-		}
-	}
-
-	public class ChatLine
-	{
-		public readonly Color Color;
-		public readonly string Name;
-		public readonly string Text;
-		public readonly Color TextColor;
-
-		public ChatLine(string name, Color nameColor, string text, Color textColor)
-		{
-			Color = nameColor;
-			Name = name;
-			Text = text;
-			TextColor = textColor;
 		}
 	}
 }
