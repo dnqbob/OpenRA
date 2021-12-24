@@ -115,7 +115,7 @@ MapGrid:
 	EnableDepthBuffer: True
 	Type: RectangularIsometric
 	MaximumTerrainHeight: 16
-	SubCellOffsets: 0,0,0, -362,181,0, 0,-128,0, 362,181,0
+	SubCellOffsets: 0,0,0, -362,0,0, 0,362,0, 362,0,0
 	DefaultSubCell: 2
 
 Cursors:
@@ -131,6 +131,7 @@ Assemblies:
 ChromeLayout:
 	common|chrome/ingame.yaml
 	common|chrome/ingame-chat.yaml
+	common|chrome/ingame-transients.yaml
 	common|chrome/ingame-fmvplayer.yaml
 	common|chrome/ingame-menu.yaml
 	common|chrome/ingame-info.yaml
@@ -180,6 +181,7 @@ ChromeLayout:
 	common|chrome/missionbrowser.yaml
 	common|chrome/confirmation-dialogs.yaml
 	common|chrome/editor.yaml
+	common|chrome/text-notifications.yaml
 
 Voices:
 	ts|audio/voices.yaml

@@ -18,8 +18,9 @@ Packages:
 
 	~SOUND.RS
 	d2k|bits
-	d2k|bits/scripts
 	d2k|bits/tex
+	d2k|scripts
+	common|scripts
 	d2k|uibits
 
 MapFolders:
@@ -69,6 +70,7 @@ Assemblies:
 ChromeLayout:
 	common|chrome/ingame.yaml
 	common|chrome/ingame-chat.yaml
+	common|chrome/ingame-transients.yaml
 	common|chrome/ingame-fmvplayer.yaml
 	d2k|chrome/ingame-menu.yaml
 	common|chrome/ingame-info.yaml
@@ -117,6 +119,7 @@ ChromeLayout:
 	common|chrome/replaybrowser.yaml
 	common|chrome/gamesave-browser.yaml
 	common|chrome/gamesave-loading.yaml
+	common|chrome/text-notifications.yaml
 
 Weapons:
 	d2k|weapons/debris.yaml

@@ -153,11 +153,10 @@ APC:
 		RevokeDelay: 18
 		RevokeOnNewTarget: False
 		RevokeAll: True
-	AttackFrontal:
-		Voice: Attack
 	AttackMove:
 		Voice: Attack
 	AttackTurreted:
+		Voice: Attack
 	WithMuzzleOverlay:
 	WithSpriteTurret:
 		RequiresCondition: !attack-air
@@ -223,8 +222,7 @@ ARTY:
 		EffectiveOwnerFromOwner: true
 	Explodes:
 		Weapon: ArtilleryShell
-		EmptyWeapon: UnitExplode
-		LoadedChance: 75
+		EmptyWeapon: ArtilleryShell
 
 FTNK:
 	Inherits: ^Tank
@@ -390,11 +388,10 @@ JEEP:
 		Weapon: MachineGunH
 		LocalOffset: 171,0,85
 		MuzzleSequence: muzzle
-	AttackFrontal:
-		Voice: Attack
 	AttackMove:
 		Voice: Attack
 	AttackTurreted:
+		Voice: Attack
 	WithMuzzleOverlay:
 	WithSpriteTurret:
 	SpawnActorOnDeath:
@@ -437,11 +434,10 @@ LTNK:
 		RecoilRecovery: 17
 		LocalOffset: 720,0,90
 		MuzzleSequence: muzzle
-	AttackFrontal:
-		Voice: Attack
 	AttackMove:
 		Voice: Attack
 	AttackTurreted:
+		Voice: Attack
 	WithMuzzleOverlay:
 	WithSpriteTurret:
 	SpawnActorOnDeath:
@@ -483,11 +479,10 @@ MTNK:
 		RecoilRecovery: 26
 		LocalOffset: 768,0,90
 		MuzzleSequence: muzzle
-	AttackFrontal:
-		Voice: Attack
 	AttackMove:
 		Voice: Attack
 	AttackTurreted:
+		Voice: Attack
 	WithMuzzleOverlay:
 	WithSpriteTurret:
 	Explodes:
@@ -544,11 +539,10 @@ HTNK:
 		LocalYaw: -100, 100
 		Recoil: 10
 		MuzzleSequence: muzzle
-	AttackFrontal:
-		Voice: Attack
 	AttackMove:
 		Voice: Attack
 	AttackTurreted:
+		Voice: Attack
 	WithMuzzleOverlay:
 	ChangesHealth:
 		Step: 500
@@ -706,8 +700,8 @@ STNK:
 	RevealsShroud:
 		Range: 7c0
 	Cloak:
-		InitialDelay: 90
-		CloakDelay: 90
+		InitialDelay: 85
+		CloakDelay: 85
 		CloakSound: trans1.aud
 		UncloakSound: trans1.aud
 		UncloakOn: Attack, Unload, Dock, Damage, Heal

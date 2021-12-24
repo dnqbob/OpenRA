@@ -16,7 +16,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Reflection;
 using System.Runtime;
 using System.Threading;
 using OpenRA.Graphics;
@@ -357,7 +356,8 @@ namespace OpenRA
 					var platformType = loader.LoadDefaultAssembly().GetTypes().SingleOrDefault(t => typeof(IPlatform).IsAssignableFrom(t));
 
 #else
-					var assembly = Assembly.LoadFile(rendererPath);
+					// NOTE: This is currently the only use of System.Reflection in this file, so would give an unused using error if we import it above
+					var assembly = System.Reflection.Assembly.LoadFile(rendererPath);
 					var platformType = assembly.GetTypes().SingleOrDefault(t => typeof(IPlatform).IsAssignableFrom(t));
 #endif
 
@@ -407,19 +407,11 @@ namespace OpenRA
 				if (launchPath != null && launchPath.First() == '"' && launchPath.Last() == '"')
 					launchPath = launchPath.Substring(1, launchPath.Length - 2);
 
-				if (launchPath == null)
-				{
-					// When launching the assembly directly we must propagate the Engine.EngineDir argument if defined
-					// Platform-specific launchers are expected to manage this internally.
-					launchPath = Assembly.GetEntryAssembly().Location;
-					if (!string.IsNullOrEmpty(engineDirArg))
-						launchArgs.Add("Engine.EngineDir=\"" + engineDirArg + "\"");
-				}
+				// Metadata registration requires an explicit launch path
+				if (launchPath != null)
+					ExternalMods.Register(Mods[modID], launchPath, launchArgs, ModRegistration.User);
 
-				ExternalMods.Register(Mods[modID], launchPath, launchArgs, ModRegistration.User);
-
-				if (ExternalMods.TryGetValue(ExternalMod.MakeKey(Mods[modID]), out var activeMod))
-					ExternalMods.ClearInvalidRegistrations(activeMod, ModRegistration.User);
+				ExternalMods.ClearInvalidRegistrations(ModRegistration.User);
 			}
 
 			Console.WriteLine("External mods:");
@@ -779,9 +771,7 @@ namespace OpenRA
 
 				// ReplayTimestep = 0 means the replay is paused: we need to keep logicInterval as UI.Timestep to avoid breakage
 				if (logicWorld != null && !(logicWorld.IsReplay && logicWorld.ReplayTimestep == 0))
-					logicInterval = logicWorld.IsLoadingGameSave ? 1 :
-						logicWorld.IsReplay ? logicWorld.ReplayTimestep :
-						logicWorld.Timestep;
+					logicInterval = logicWorld == OrderManager.World ? OrderManager.SuggestedTimestep : logicWorld.Timestep;
 
 				// Ideal time between screen updates
 				var maxFramerate = Settings.Graphics.CapFramerate ? Settings.Graphics.MaxFramerate.Clamp(1, 1000) : 1000;
@@ -963,12 +953,9 @@ namespace OpenRA
 				Order.Command($"state {Session.ClientState.Ready}")
 			};
 
-			var path = Platform.ResolvePath(launchMap);
-			var map = ModData.MapCache.SingleOrDefault(m => m.Uid == launchMap) ??
-				ModData.MapCache.SingleOrDefault(m => m.Package.Name == path);
-
+			var map = ModData.MapCache.SingleOrDefault(m => m.Uid == launchMap || Path.GetFileName(m.Package.Name) == launchMap);
 			if (map == null)
-				throw new InvalidOperationException($"Could not find map '{launchMap}'.");
+				throw new ArgumentException($"Could not find map '{launchMap}'.");
 
 			CreateAndStartLocalServer(map.Uid, orders);
 		}

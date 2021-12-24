@@ -357,6 +357,11 @@ namespace OpenRA
 			return root;
 		}
 
+		public static int MultiplyBySqrtTwo(short number)
+		{
+			return number * 46341 / 32768;
+		}
+
 		public static int IntegerDivisionRoundingAwayFromZero(int dividend, int divisor)
 		{
 			var quotient = Math.DivRem(dividend, divisor, out var remainder);
@@ -373,6 +378,11 @@ namespace OpenRA
 		public static IEnumerable<T> Append<T>(this IEnumerable<T> ts, params T[] moreTs)
 		{
 			return ts.Concat(moreTs);
+		}
+
+		public static IEnumerable<T> Exclude<T>(this IEnumerable<T> ts, params T[] exclusions)
+		{
+			return ts.Except(exclusions);
 		}
 
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> source)

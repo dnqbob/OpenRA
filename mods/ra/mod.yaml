@@ -34,7 +34,8 @@ Packages:
 	~general.mix
 	ra|bits
 	ra|bits/desert
-	ra|bits/scripts
+	ra|scripts
+	common|scripts
 	ra|uibits
 
 MapFolders:
@@ -86,6 +87,7 @@ Assemblies:
 ChromeLayout:
 	common|chrome/ingame.yaml
 	common|chrome/ingame-chat.yaml
+	common|chrome/ingame-transients.yaml
 	common|chrome/ingame-fmvplayer.yaml
 	common|chrome/ingame-info.yaml
 	common|chrome/ingame-infoscripterror.yaml
@@ -134,6 +136,7 @@ ChromeLayout:
 	common|chrome/confirmation-dialogs.yaml
 	common|chrome/editor.yaml
 	common|chrome/playerprofile.yaml
+	common|chrome/text-notifications.yaml
 
 Weapons:
 	ra|weapons/explosions.yaml

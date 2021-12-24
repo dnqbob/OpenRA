@@ -527,12 +527,12 @@ namespace OpenRA.Server
 					{
 						var httpClient = HttpClientFactory.Create();
 						var httpResponseMessage = await httpClient.GetAsync(playerDatabase.Profile + handshake.Fingerprint);
-						var result = await httpResponseMessage.Content.ReadAsStringAsync();
+						var result = await httpResponseMessage.Content.ReadAsStreamAsync();
 						PlayerProfile profile = null;
 
 						try
 						{
-							var yaml = MiniYaml.FromString(result).First();
+							var yaml = MiniYaml.FromStream(result).First();
 							if (yaml.Key == "Player")
 							{
 								profile = FieldLoader.Load<PlayerProfile>(yaml.Value);
@@ -634,6 +634,17 @@ namespace OpenRA.Server
 			ms.WriteArray(BitConverter.GetBytes(frame));
 			ms.WriteByte((byte)OrderType.Ack);
 			ms.WriteByte(count);
+			return ms.GetBuffer();
+		}
+
+		byte[] CreateTickScaleFrame(float scale)
+		{
+			var ms = new MemoryStream(17);
+			ms.WriteArray(BitConverter.GetBytes(9));
+			ms.WriteArray(BitConverter.GetBytes(0));
+			ms.WriteArray(BitConverter.GetBytes(0));
+			ms.WriteByte((byte)OrderType.TickScale);
+			ms.Write(scale);
 			return ms.GetBuffer();
 		}
 
