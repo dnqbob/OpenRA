@@ -21,6 +21,7 @@ using OpenRA.Graphics;
 using OpenRA.Primitives;
 using OpenRA.Support;
 using OpenRA.Traits;
+using OpenRA.Widgets;
 
 namespace OpenRA
 {
@@ -52,7 +53,7 @@ namespace OpenRA
 				ResourcesOffset = s.ReadUInt32();
 			}
 			else
-				throw new InvalidDataException("Unknown binary map format '{0}'".F(Format));
+				throw new InvalidDataException($"Unknown binary map format '{Format}'");
 		}
 	}
 
@@ -99,7 +100,7 @@ namespace OpenRA
 			if (node == null)
 			{
 				if (required)
-					throw new YamlException("Required field `{0}` not found in map.yaml".F(key));
+					throw new YamlException($"Required field `{key}` not found in map.yaml");
 				return;
 			}
 
@@ -164,6 +165,7 @@ namespace OpenRA
 			new MapField("Bounds"),
 			new MapField("Visibility"),
 			new MapField("Categories"),
+			new MapField("Translations", required: false),
 			new MapField("LockPreview", required: false, ignoreIfValue: "False"),
 			new MapField("Players", "PlayerDefinitions"),
 			new MapField("Actors", "ActorDefinitions"),
@@ -189,6 +191,7 @@ namespace OpenRA
 		public Rectangle Bounds;
 		public MapVisibility Visibility = MapVisibility.Lobby;
 		public string[] Categories = { "Conquest" };
+		public string[] Translations;
 
 		public int2 MapSize { get; private set; }
 
@@ -246,6 +249,8 @@ namespace OpenRA
 		CellLayer<List<MPos>> inverseCellProjection;
 		CellLayer<byte> projectedHeight;
 
+		internal Translation Translation;
+
 		public static string ComputeUID(IReadOnlyPackage package)
 		{
 			// UID is calculated by taking an SHA1 of the yaml and binary data
@@ -253,7 +258,7 @@ namespace OpenRA
 			var contents = package.Contents.ToList();
 			foreach (var required in requiredFiles)
 				if (!contents.Contains(required))
-					throw new FileNotFoundException("Required file {0} not present in this map".F(required));
+					throw new FileNotFoundException($"Required file {required} not present in this map");
 
 			var streams = new List<Stream>();
 			try
@@ -321,18 +326,18 @@ namespace OpenRA
 			Package = package;
 
 			if (!Package.Contains("map.yaml") || !Package.Contains("map.bin"))
-				throw new InvalidDataException("Not a valid map\n File: {0}".F(package.Name));
+				throw new InvalidDataException($"Not a valid map\n File: {package.Name}");
 
 			var yaml = new MiniYaml(null, MiniYaml.FromStream(Package.GetStream("map.yaml"), package.Name));
 			foreach (var field in YamlFields)
 				field.Deserialize(this, yaml.Nodes);
 
 			if (MapFormat != SupportedMapFormat)
-				throw new InvalidDataException("Map format {0} is not supported.\n File: {1}".F(MapFormat, package.Name));
+				throw new InvalidDataException($"Map format {MapFormat} is not supported.\n File: {package.Name}");
 
 			PlayerDefinitions = MiniYaml.NodesOrEmpty(yaml, "Players");
 			if (PlayerDefinitions.Count > 64)
-				throw new InvalidDataException("Maps must not define more than 64 players.\n File: {0}".F(package.Name));
+				throw new InvalidDataException($"Maps must not define more than 64 players.\n File: {package.Name}");
 
 			ActorDefinitions = MiniYaml.NodesOrEmpty(yaml, "Actors");
 
@@ -417,6 +422,8 @@ namespace OpenRA
 			}
 
 			Rules.Sequences.Preload();
+
+			Translation = new Translation(Game.Settings.Player.Language, Translations, this);
 
 			var tl = new MPos(0, 0).ToCPos(this);
 			var br = new MPos(MapSize.X - 1, MapSize.Y - 1).ToCPos(this);
@@ -1244,7 +1251,7 @@ namespace OpenRA
 
 			if (maxRange >= Grid.TilesByDistance.Length)
 				throw new ArgumentOutOfRangeException(nameof(maxRange),
-					"The requested range ({0}) cannot exceed the value of MaximumTileSearchRange ({1})".F(maxRange, Grid.MaximumTileSearchRange));
+					$"The requested range ({maxRange}) cannot exceed the value of MaximumTileSearchRange ({Grid.MaximumTileSearchRange})");
 
 			for (var i = minRange; i <= maxRange; i++)
 			{
@@ -1306,6 +1313,14 @@ namespace OpenRA
 				return modData.DefaultFileSystem.IsExternalModFile(filename);
 
 			return false;
+		}
+
+		public string Translate(string key, IDictionary<string, object> args = null, string attribute = null)
+		{
+			if (Translation.GetFormattedMessage(key, args, attribute) == key)
+				return Ui.Translate(key, args, attribute);
+
+			return Translation.GetFormattedMessage(key, args, attribute);
 		}
 	}
 }

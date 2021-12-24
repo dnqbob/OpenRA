@@ -14,8 +14,9 @@ using OpenRA.Graphics;
 using OpenRA.Primitives;
 using OpenRA.Traits;
 
-namespace OpenRA.Mods.Common
+namespace OpenRA.Mods.Common.Traits
 {
+	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Define a player palette by swapping palette indices.")]
 	public class IndexedPlayerPaletteInfo : TraitInfo, IRulesetLoaded
 	{
@@ -41,7 +42,7 @@ namespace OpenRA.Mods.Common
 		{
 			foreach (var p in PlayerIndex)
 				if (p.Value.Length != RemapIndex.Length)
-					throw new YamlException("PlayerIndex for player `{0}` length does not match RemapIndex!".F(p.Key));
+					throw new YamlException($"PlayerIndex for player `{p.Key}` length does not match RemapIndex!");
 		}
 	}
 

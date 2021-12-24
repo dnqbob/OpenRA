@@ -14,6 +14,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OpenRA.Graphics;
+using OpenRA.Mods.Common.Traits;
 using OpenRA.Network;
 using OpenRA.Primitives;
 using OpenRA.Traits;
@@ -32,7 +33,6 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 		readonly WorldRenderer worldRenderer;
 		readonly bool skirmishMode;
 		readonly Ruleset modRules;
-		readonly World shellmapWorld;
 		readonly WebServices services;
 
 		enum PanelType { Players, Options, Music, Servers, Kick, ForceStart }
@@ -53,7 +53,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 
 		readonly Dictionary<string, LobbyFaction> factions = new Dictionary<string, LobbyFaction>();
 
-		readonly ColorPreviewManagerWidget colorPreview;
+		readonly ColorPickerManagerInfo colorManager;
 
 		readonly TabCompletionLogic tabCompletion = new TabCompletionLogic();
 
@@ -116,7 +116,6 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 
 			// TODO: This needs to be reworked to support per-map tech levels, bots, etc.
 			modRules = modData.DefaultRules;
-			shellmapWorld = worldRenderer.World;
 
 			services = modData.Manifest.Get<WebServices>();
 
@@ -159,8 +158,8 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			editableSpectatorTemplate = players.Get("TEMPLATE_EDITABLE_SPECTATOR");
 			nonEditableSpectatorTemplate = players.Get("TEMPLATE_NONEDITABLE_SPECTATOR");
 			newSpectatorTemplate = players.Get("TEMPLATE_NEW_SPECTATOR");
-			colorPreview = lobby.Get<ColorPreviewManagerWidget>("COLOR_MANAGER");
-			colorPreview.Color = Game.Settings.Player.Color;
+			colorManager = modRules.Actors[SystemActors.World].TraitInfo<ColorPickerManagerInfo>();
+			colorManager.Color = Game.Settings.Player.Color;
 
 			foreach (var f in modRules.Actors[SystemActors.World].TraitInfos<FactionInfo>())
 				factions.Add(f.InternalName, new LobbyFaction { Selectable = f.Selectable, Name = f.Name, Side = f.Side, Description = f.Description });
@@ -229,7 +228,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 										var bot = botTypes.Random(Game.CosmeticRandom);
 										var c = orderManager.LobbyInfo.ClientInSlot(slot.Key);
 										if (slot.Value.AllowBots == true && (c == null || c.Bot != null))
-											orderManager.IssueOrder(Order.Command("slot_bot {0} {1} {2}".F(slot.Key, botController.Index, bot)));
+											orderManager.IssueOrder(Order.Command($"slot_bot {slot.Key} {botController.Index} {bot}"));
 									}
 								}
 							}
@@ -261,9 +260,9 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					{
 						var teamOptions = Enumerable.Range(2, teamCount - 1).Reverse().Select(d => new DropDownOption
 						{
-							Title = "{0} Teams".F(d),
+							Title = $"{d} Teams",
 							IsSelected = () => false,
-							OnClick = () => orderManager.IssueOrder(Order.Command("assignteams {0}".F(d.ToString())))
+							OnClick = () => orderManager.IssueOrder(Order.Command($"assignteams {d.ToString()}"))
 						}).ToList();
 
 						if (orderManager.LobbyInfo.Slots.Any(s => s.Value.AllowBots))
@@ -518,7 +517,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			if (map.Status == MapStatus.Available)
 			{
 				// Tell the server that we have the map
-				orderManager.IssueOrder(Order.Command("state {0}".F(Session.ClientState.NotReady)));
+				orderManager.IssueOrder(Order.Command($"state {Session.ClientState.NotReady}"));
 
 				if (addBotOnMapLoad)
 				{
@@ -526,7 +525,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					var bot = map.PlayerActorInfo.TraitInfos<IBotInfo>().Select(t => t.Type).FirstOrDefault();
 					var botController = orderManager.LobbyInfo.Clients.FirstOrDefault(c => c.IsAdmin);
 					if (slot != null && bot != null)
-						orderManager.IssueOrder(Order.Command("slot_bot {0} {1} {2}".F(slot, botController.Index, bot)));
+						orderManager.IssueOrder(Order.Command($"slot_bot {slot} {botController.Index} {bot}"));
 
 					addBotOnMapLoad = false;
 				}
@@ -601,7 +600,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					else
 						LobbyUtils.SetupEditableNameWidget(template, slot, client, orderManager, worldRenderer);
 
-					LobbyUtils.SetupEditableColorWidget(template, slot, client, orderManager, shellmapWorld, colorPreview);
+					LobbyUtils.SetupEditableColorWidget(template, slot, client, orderManager, worldRenderer, colorManager);
 					LobbyUtils.SetupEditableFactionWidget(template, slot, client, orderManager, factions);
 					LobbyUtils.SetupEditableTeamWidget(template, slot, client, orderManager, map);
 					LobbyUtils.SetupEditableHandicapWidget(template, slot, client, orderManager, map);

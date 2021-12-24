@@ -271,6 +271,12 @@ namespace OpenRA.Mods.Common.Traits
 		IEnumerable<string> PaletteNames { get; }
 	}
 
+	[RequireExplicitImplementation]
+	public interface IProvidesAssetBrowserColorPickerPalettes
+	{
+		IEnumerable<string> ColorPickerPaletteNames { get; }
+	}
+
 	public interface ICallForTransport
 	{
 		WDist MinimumDistance { get; }

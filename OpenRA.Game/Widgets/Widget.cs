@@ -32,6 +32,8 @@ namespace OpenRA.Widgets
 		public static Widget KeyboardFocusWidget;
 		public static Widget MouseOverWidget;
 
+		internal static Translation Translation;
+
 		public static void CloseWindow()
 		{
 			if (WindowList.Count > 0)
@@ -78,7 +80,7 @@ namespace OpenRA.Widgets
 			if (LoadWidget(id, parent, args) is T widget)
 				return widget;
 
-			throw new InvalidOperationException("Widget {0} is not of type {1}".F(id, typeof(T).Name));
+			throw new InvalidOperationException($"Widget {id} is not of type {typeof(T).Name}");
 		}
 
 		public static Widget LoadWidget(string id, Widget parent, WidgetArgs args)
@@ -155,6 +157,27 @@ namespace OpenRA.Widgets
 			HandleInput(new MouseInput(MouseInputEvent.Move, MouseButton.None,
 				Viewport.LastMousePos, int2.Zero, Modifiers.None, 0));
 		}
+
+		public static void InitializeTranslation()
+		{
+			Translation = new Translation(Game.Settings.Player.Language, Game.ModData.Manifest.Translations, Game.ModData.DefaultFileSystem);
+		}
+
+		public static string Translate(string key, IDictionary<string, object> args = null, string attribute = null)
+		{
+			if (Translation == null)
+				return null;
+
+			return Translation.GetFormattedMessage(key, args, attribute);
+		}
+
+		public static string TranslationAttribute(string key, string attribute = null)
+		{
+			if (Translation == null)
+				return null;
+
+			return Translation.GetAttribute(key, attribute);
+		}
 	}
 
 	public class ChromeLogic : IDisposable
@@ -213,7 +236,7 @@ namespace OpenRA.Widgets
 
 		public virtual Widget Clone()
 		{
-			throw new InvalidOperationException("Widget type `{0}` is not cloneable.".F(GetType().Name));
+			throw new InvalidOperationException($"Widget type `{GetType().Name}` is not cloneable.");
 		}
 
 		public virtual int2 RenderOrigin
@@ -556,9 +579,7 @@ namespace OpenRA.Widgets
 		{
 			var t = GetOrNull<T>(id);
 			if (t == null)
-				throw new InvalidOperationException(
-					"Widget {0} has no child {1} of type {2}".F(
-						Id, id, typeof(T).Name));
+				throw new InvalidOperationException($"Widget {Id} has no child {id} of type {typeof(T).Name}");
 			return t;
 		}
 

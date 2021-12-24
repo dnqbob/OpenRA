@@ -15,7 +15,7 @@ using OpenRA.Graphics;
 using OpenRA.Primitives;
 using OpenRA.Traits;
 
-namespace OpenRA.Mods.Common
+namespace OpenRA.Mods.Common.Traits
 {
 	[TraitLocation(SystemActors.World | SystemActors.EditorWorld)]
 	[Desc("Define a palette by swapping palette indices.")]
@@ -46,7 +46,7 @@ namespace OpenRA.Mods.Common
 		public void RulesetLoaded(Ruleset rules, ActorInfo ai)
 		{
 			if (Index.Length != ReplaceIndex.Length)
-				throw new YamlException("ReplaceIndex length does not match Index length for palette {0}".F(Name));
+				throw new YamlException($"ReplaceIndex length does not match Index length for palette {Name}");
 		}
 	}
 
