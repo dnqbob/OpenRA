@@ -19,23 +19,35 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 		[ObjectCreator.UseCtor]
 		public AddFactionSuffixLogic(Widget widget, World world)
 		{
+			if (world.LocalPlayer == null)
+				return;
+
 			if (!ChromeMetrics.TryGet("FactionSuffix-" + world.LocalPlayer.Faction.InternalName, out string faction))
 				faction = world.LocalPlayer.Faction.InternalName;
 			var suffix = "-" + faction;
 
-			if (widget is ButtonWidget)
-				((ButtonWidget)widget).Background += suffix;
-			else if (widget is ImageWidget)
-				((ImageWidget)widget).ImageCollection += suffix;
-			else if (widget is BackgroundWidget)
-				((BackgroundWidget)widget).Background += suffix;
-			else if (widget is ProductionTabsWidget)
+			if (widget is ButtonWidget bw)
+				bw.Background += suffix;
+			else if (widget is ImageWidget iw)
+				iw.ImageCollection += suffix;
+			else if (widget is BackgroundWidget bgw)
+				bgw.Background += suffix;
+			else if (widget is TextFieldWidget tfw)
+				tfw.Background += suffix;
+			else if (widget is ScrollPanelWidget spw)
 			{
-				((ProductionTabsWidget)widget).Button += suffix;
-				((ProductionTabsWidget)widget).Background += suffix;
+				spw.Button += suffix;
+				spw.Background += suffix;
+				spw.ScrollBarBackground += suffix;
+				spw.Decorations += suffix;
+			}
+			else if (widget is ProductionTabsWidget ptw)
+			{
+				ptw.Button += suffix;
+				ptw.Background += suffix;
 			}
 			else
-				throw new InvalidOperationException("AddFactionSuffixLogic only supports ButtonWidget, ImageWidget, BackgroundWidget and ProductionTabsWidget");
+				throw new InvalidOperationException("AddFactionSuffixLogic only supports ButtonWidget, ImageWidget, BackgroundWidget, TextFieldWidget, ScrollPanelWidget and ProductionTabsWidget");
 		}
 	}
 }

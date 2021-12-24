@@ -41,19 +41,26 @@ namespace OpenRA.Mods.Common.Widgets
 					});
 		}
 
-		public static void DrawRGBA(Sprite s, float2 pos)
+		public static void DrawSprite(Sprite s, float2 pos)
 		{
 			Game.Renderer.RgbaSpriteRenderer.DrawSprite(s, pos);
 		}
 
-		public static void DrawSHPCentered(Sprite s, float2 pos, PaletteReference p)
+		public static void DrawSprite(Sprite s, float2 pos, Size size)
 		{
-			Game.Renderer.SpriteRenderer.DrawSprite(s, pos - 0.5f * s.Size, p);
+			var scale = new float3(size.Width / s.Size.X, size.Height / s.Size.Y, 1f);
+			Game.Renderer.RgbaSpriteRenderer.DrawSprite(s, pos, scale);
 		}
 
-		public static void DrawSHPCentered(Sprite s, float2 pos, PaletteReference p, float scale)
+		public static void DrawSprite(Sprite s, float2 pos, float2 size)
 		{
-			Game.Renderer.SpriteRenderer.DrawSprite(s, pos - 0.5f * scale * s.Size, p, scale * s.Size);
+			var scale = new float3(size.X / s.Size.X, size.Y / s.Size.Y, 1f);
+			Game.Renderer.RgbaSpriteRenderer.DrawSprite(s, pos, scale);
+		}
+
+		public static void DrawSpriteCentered(Sprite s, PaletteReference p, float2 pos, float scale = 1f)
+		{
+			Game.Renderer.SpriteRenderer.DrawSprite(s, p, pos - 0.5f * scale * s.Size, scale);
 		}
 
 		public static void DrawPanel(string collection, Rectangle bounds)
@@ -83,7 +90,7 @@ namespace OpenRA.Mods.Common.Widgets
 						ss = new Sprite(s.Sheet, rr, s.Channel, scale);
 					}
 
-					DrawRGBA(ss, new float2(x, y));
+					DrawSprite(ss, new float2(x, y));
 				}
 			}
 		}
@@ -165,19 +172,19 @@ namespace OpenRA.Mods.Common.Widgets
 
 			// Top-left corner
 			if (sprites[0] != null)
-				DrawRGBA(sprites[0], new float2(bounds.Left, bounds.Top));
+				DrawSprite(sprites[0], new float2(bounds.Left, bounds.Top));
 
 			// Top-right corner
 			if (sprites[2] != null)
-				DrawRGBA(sprites[2], new float2(bounds.Right - sprites[2].Size.X, bounds.Top));
+				DrawSprite(sprites[2], new float2(bounds.Right - sprites[2].Size.X, bounds.Top));
 
 			// Bottom-left corner
 			if (sprites[6] != null)
-				DrawRGBA(sprites[6], new float2(bounds.Left, bounds.Bottom - sprites[6].Size.Y));
+				DrawSprite(sprites[6], new float2(bounds.Left, bounds.Bottom - sprites[6].Size.Y));
 
 			// Bottom-right corner
 			if (sprites[8] != null)
-				DrawRGBA(sprites[8], new float2(bounds.Right - sprites[8].Size.X, bounds.Bottom - sprites[8].Size.Y));
+				DrawSprite(sprites[8], new float2(bounds.Right - sprites[8].Size.X, bounds.Bottom - sprites[8].Size.Y));
 		}
 
 		public static string FormatTime(int ticks, int timestep)

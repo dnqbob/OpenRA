@@ -19,7 +19,6 @@ using System.Net;
 using System.Reflection;
 using System.Runtime;
 using System.Threading;
-using System.Threading.Tasks;
 using OpenRA.Graphics;
 using OpenRA.Network;
 using OpenRA.Primitives;
@@ -62,17 +61,17 @@ namespace OpenRA
 
 		public static OrderManager JoinServer(ConnectionTarget endpoint, string password, bool recordReplay = true)
 		{
-			var connection = new NetworkConnection(endpoint);
+			var newConnection = new NetworkConnection(endpoint);
 			if (recordReplay)
-				connection.StartRecording(() => { return TimestampedFilename(); });
+				newConnection.StartRecording(() => { return TimestampedFilename(); });
 
-			var om = new OrderManager(connection);
+			var om = new OrderManager(newConnection);
 			JoinInner(om);
 			CurrentServerSettings.Password = password;
 			CurrentServerSettings.Target = endpoint;
 
 			lastConnectionState = ConnectionState.PreConnecting;
-			ConnectionStateChanged(OrderManager, password, connection);
+			ConnectionStateChanged(OrderManager, password, newConnection);
 
 			return om;
 		}
@@ -192,8 +191,6 @@ namespace OpenRA
 			Ui.MouseFocusWidget = null;
 			Ui.KeyboardFocusWidget = null;
 
-			OrderManager.LocalFrameNumber = 0;
-			OrderManager.LastTickTime = RunTime;
 			OrderManager.StartGame();
 			worldRenderer.RefreshPalette();
 			Cursor.SetCursor(ChromeMetrics.Get<string>("DefaultCursor"));
@@ -585,49 +582,28 @@ namespace OpenRA
 
 			var world = orderManager.World;
 
-			var uiTickDelta = tick - Ui.LastTickTime;
-			if (uiTickDelta >= Ui.Timestep)
+			if (Ui.LastTickTime.ShouldAdvance(tick))
 			{
-				// Explained below for the world tick calculation
-				var integralTickTimestep = (uiTickDelta / Ui.Timestep) * Ui.Timestep;
-				Ui.LastTickTime += integralTickTimestep >= TimestepJankThreshold ? integralTickTimestep : Ui.Timestep;
-
+				Ui.LastTickTime.AdvanceTickTime(tick);
 				Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, Ui.Tick);
 				Cursor.Tick();
 			}
 
-			var worldTimestep = world == null ? Ui.Timestep :
-				world.IsLoadingGameSave ? 1 :
-				world.IsReplay ? world.ReplayTimestep :
-				world.Timestep;
-
-			var worldTickDelta = tick - orderManager.LastTickTime;
-			if (worldTimestep != 0 && worldTickDelta >= worldTimestep)
+			if (orderManager.LastTickTime.ShouldAdvance(tick))
 			{
 				using (new PerfSample("tick_time"))
 				{
-					// Tick the world to advance the world time to match real time:
-					//    If dt < TickJankThreshold then we should try and catch up by repeatedly ticking
-					//    If dt >= TickJankThreshold then we should accept the jank and progress at the normal rate
-					// dt is rounded down to an integer tick count in order to preserve fractional tick components.
-					var integralTickTimestep = (worldTickDelta / worldTimestep) * worldTimestep;
-					orderManager.LastTickTime += integralTickTimestep >= TimestepJankThreshold ? integralTickTimestep : worldTimestep;
+					orderManager.LastTickTime.AdvanceTickTime(tick);
 
 					Sound.Tick();
+
 					Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, orderManager.TickImmediate);
 
 					if (world == null)
 						return;
 
-					var isNetTick = LocalTick % NetTickScale == 0;
-
-					if (!isNetTick || orderManager.IsReadyForNextFrame)
+					if (orderManager.TryTick())
 					{
-						++orderManager.LocalFrameNumber;
-
-						if (isNetTick)
-							orderManager.Tick();
-
 						Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, () =>
 						{
 							world.OrderGenerator.Tick(world);
@@ -637,8 +613,6 @@ namespace OpenRA
 
 						PerfHistory.Tick();
 					}
-					else if (orderManager.NetFrameNumber == 0)
-						orderManager.LastTickTime = RunTime;
 
 					// Wait until we have done our first world Tick before TickRendering
 					if (orderManager.LocalFrameNumber > 0)
@@ -653,10 +627,10 @@ namespace OpenRA
 		{
 			PerformDelayedActions();
 
-			if (OrderManager.Connection.ConnectionState != lastConnectionState)
+			if (OrderManager.Connection is NetworkConnection nc && nc.ConnectionState != lastConnectionState)
 			{
-				lastConnectionState = OrderManager.Connection.ConnectionState;
-				ConnectionStateChanged(OrderManager, null, null);
+				lastConnectionState = nc.ConnectionState;
+				ConnectionStateChanged(OrderManager, null, nc);
 			}
 
 			InnerLogicTick(OrderManager);
