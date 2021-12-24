@@ -11,9 +11,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using OpenRA.Mods.Common.Traits;
-using OpenRA.Primitives;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Pathfinder
@@ -75,7 +73,8 @@ namespace OpenRA.Mods.Common.Pathfinder
 
 	sealed class PathGraph : IGraph<CellInfo>
 	{
-		public const int CostForInvalidCell = int.MaxValue;
+		public const int PathCostForInvalidPath = int.MaxValue;
+		public const short MovementCostForUnreachableCell = short.MaxValue;
 
 		public Actor Actor { get; private set; }
 		public World World { get; private set; }
@@ -103,7 +102,7 @@ namespace OpenRA.Mods.Common.Pathfinder
 
 			// PERF: Avoid LINQ
 			foreach (var cml in world.GetCustomMovementLayers().Values)
-				if (cml.EnabledForActor(actor.Info, locomotorInfo))
+				if (cml.EnabledForLocomotor(locomotorInfo))
 					customLayerInfo[cml.Index] = (cml, pooledLayer.GetLayer());
 
 			World = world;
@@ -147,11 +146,11 @@ namespace OpenRA.Mods.Common.Pathfinder
 			{
 				var dir = directions[i];
 				var neighbor = position + dir;
-				var movementCost = GetCostToNode(neighbor, dir);
+				var pathCost = GetPathCostToNode(neighbor, dir);
 
 				// PERF: Skip closed cells already, 15% of all cells
-				if (movementCost != CostForInvalidCell && info[neighbor].Status != CellStatus.Closed)
-					validNeighbors.Add(new GraphConnection(neighbor, movementCost));
+				if (pathCost != PathCostForInvalidPath && info[neighbor].Status != CellStatus.Closed)
+					validNeighbors.Add(new GraphConnection(neighbor, pathCost));
 			}
 
 			if (posLayer == 0)
@@ -159,32 +158,32 @@ namespace OpenRA.Mods.Common.Pathfinder
 				foreach (var cli in customLayerInfo.Values)
 				{
 					var layerPosition = new CPos(position.X, position.Y, cli.Layer.Index);
-					var entryCost = cli.Layer.EntryMovementCost(Actor.Info, locomotor.Info, layerPosition);
-					if (entryCost != CostForInvalidCell)
+					var entryCost = cli.Layer.EntryMovementCost(locomotor.Info, layerPosition);
+					if (entryCost != MovementCostForUnreachableCell)
 						validNeighbors.Add(new GraphConnection(layerPosition, entryCost));
 				}
 			}
 			else
 			{
 				var layerPosition = new CPos(position.X, position.Y, 0);
-				var exitCost = customLayerInfo[posLayer].Layer.ExitMovementCost(Actor.Info, locomotor.Info, layerPosition);
-				if (exitCost != CostForInvalidCell)
+				var exitCost = customLayerInfo[posLayer].Layer.ExitMovementCost(locomotor.Info, layerPosition);
+				if (exitCost != MovementCostForUnreachableCell)
 					validNeighbors.Add(new GraphConnection(layerPosition, exitCost));
 			}
 
 			return validNeighbors;
 		}
 
-		int GetCostToNode(CPos destNode, CVec direction)
+		int GetPathCostToNode(CPos destNode, CVec direction)
 		{
 			var movementCost = locomotor.MovementCostToEnterCell(Actor, destNode, checkConditions, IgnoreActor);
-			if (movementCost != short.MaxValue && !(CustomBlock != null && CustomBlock(destNode)))
-				return CalculateCellCost(destNode, direction, movementCost);
+			if (movementCost != MovementCostForUnreachableCell && !(CustomBlock != null && CustomBlock(destNode)))
+				return CalculateCellPathCost(destNode, direction, movementCost);
 
-			return CostForInvalidCell;
+			return PathCostForInvalidPath;
 		}
 
-		int CalculateCellCost(CPos neighborCPos, CVec direction, int movementCost)
+		int CalculateCellPathCost(CPos neighborCPos, CVec direction, int movementCost)
 		{
 			var cellCost = movementCost;
 
@@ -194,8 +193,8 @@ namespace OpenRA.Mods.Common.Pathfinder
 			if (CustomCost != null)
 			{
 				var customCost = CustomCost(neighborCPos);
-				if (customCost == CostForInvalidCell)
-					return CostForInvalidCell;
+				if (customCost == PathCostForInvalidPath)
+					return PathCostForInvalidPath;
 
 				cellCost += customCost;
 			}
@@ -206,7 +205,7 @@ namespace OpenRA.Mods.Common.Pathfinder
 				var heightLayer = World.Map.Height;
 				var from = neighborCPos - direction;
 				if (Math.Abs(heightLayer[neighborCPos] - heightLayer[from]) > 1)
-					return CostForInvalidCell;
+					return PathCostForInvalidPath;
 			}
 
 			// Directional bonuses for smoother flow!

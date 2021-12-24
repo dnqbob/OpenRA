@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using OpenRA.Mods.Common.Traits;
-using OpenRA.Primitives;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Pathfinder
@@ -108,7 +107,7 @@ namespace OpenRA.Mods.Common.Pathfinder
 			var currentCell = Graph[currentMinNode];
 			Graph[currentMinNode] = new CellInfo(currentCell.CostSoFar, currentCell.EstimatedTotal, currentCell.PreviousPos, CellStatus.Closed);
 
-			if (Graph.CustomCost != null && Graph.CustomCost(currentMinNode) == PathGraph.CostForInvalidCell)
+			if (Graph.CustomCost != null && Graph.CustomCost(currentMinNode) == PathGraph.PathCostForInvalidPath)
 				return currentMinNode;
 
 			foreach (var connection in Graph.GetConnections(currentMinNode))

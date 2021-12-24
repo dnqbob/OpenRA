@@ -322,9 +322,9 @@ namespace OpenRA.Server
 			events.Add(new ConnectionPacketEvent(conn, frame, data));
 		}
 
-		internal void OnConnectionPing(Connection conn, int[] pingHistory)
+		internal void OnConnectionPing(Connection conn, int[] pingHistory, byte queueLength)
 		{
-			events.Add(new ConnectionPingEvent(conn, pingHistory));
+			events.Add(new ConnectionPingEvent(conn, pingHistory, queueLength));
 		}
 
 		internal void OnConnectionDisconnect(Connection conn)
@@ -626,13 +626,14 @@ namespace OpenRA.Server
 			return ms.GetBuffer();
 		}
 
-		byte[] CreateAckFrame(int frame)
+		byte[] CreateAckFrame(int frame, byte count)
 		{
-			var ms = new MemoryStream(13);
-			ms.WriteArray(BitConverter.GetBytes(5));
+			var ms = new MemoryStream(14);
+			ms.WriteArray(BitConverter.GetBytes(6));
 			ms.WriteArray(BitConverter.GetBytes(0));
 			ms.WriteArray(BitConverter.GetBytes(frame));
 			ms.WriteByte((byte)OrderType.Ack);
+			ms.WriteByte(count);
 			return ms.GetBuffer();
 		}
 
@@ -812,7 +813,7 @@ namespace OpenRA.Server
 				if (data.Length == 0 || data[0] != (byte)OrderType.SyncHash)
 				{
 					frame += OrderLatency;
-					DispatchFrameToClient(conn, conn.PlayerIndex, CreateAckFrame(frame));
+					DispatchFrameToClient(conn, conn.PlayerIndex, CreateAckFrame(frame, 1));
 
 					// Track the last frame for each client so the disconnect handling can write
 					// an EndOfOrders marker with the correct frame number.
@@ -1019,7 +1020,7 @@ namespace OpenRA.Server
 			}
 		}
 
-		public void ReceivePing(Connection conn, int[] pingHistory)
+		public void ReceivePing(Connection conn, int[] pingHistory, byte queueLength)
 		{
 			// Levels set relative to the default order lag of 3 net ticks (360ms)
 			// TODO: Adjust this once dynamic lag is implemented
@@ -1365,16 +1366,18 @@ namespace OpenRA.Server
 		{
 			readonly Connection connection;
 			readonly int[] pingHistory;
+			readonly byte queueLength;
 
-			public ConnectionPingEvent(Connection connection, int[] pingHistory)
+			public ConnectionPingEvent(Connection connection, int[] pingHistory, byte queueLength)
 			{
 				this.connection = connection;
 				this.pingHistory = pingHistory;
+				this.queueLength = queueLength;
 			}
 
 			void IServerEvent.Invoke(Server server)
 			{
-				server.ReceivePing(connection, pingHistory);
+				server.ReceivePing(connection, pingHistory, queueLength);
 			}
 		}
 

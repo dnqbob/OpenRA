@@ -11,6 +11,7 @@
 
 using System.Collections.Generic;
 using OpenRA.Graphics;
+using OpenRA.Mods.Common.Pathfinder;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Traits
@@ -69,7 +70,7 @@ namespace OpenRA.Mods.Common.Traits
 			}
 		}
 
-		bool ICustomMovementLayer.EnabledForActor(ActorInfo a, LocomotorInfo li) { return enabled; }
+		bool ICustomMovementLayer.EnabledForLocomotor(LocomotorInfo li) { return enabled; }
 		byte ICustomMovementLayer.Index => CustomMovementLayerType.ElevatedBridge;
 		bool ICustomMovementLayer.InteractsWithDefaultLayer => true;
 		bool ICustomMovementLayer.ReturnToGroundLayerOnIdle => false;
@@ -79,14 +80,14 @@ namespace OpenRA.Mods.Common.Traits
 			return cellCenters[cell];
 		}
 
-		int ICustomMovementLayer.EntryMovementCost(ActorInfo a, LocomotorInfo li, CPos cell)
+		short ICustomMovementLayer.EntryMovementCost(LocomotorInfo li, CPos cell)
 		{
-			return ends.Contains(cell) ? 0 : int.MaxValue;
+			return ends.Contains(cell) ? (short)0 : PathGraph.MovementCostForUnreachableCell;
 		}
 
-		int ICustomMovementLayer.ExitMovementCost(ActorInfo a, LocomotorInfo li, CPos cell)
+		short ICustomMovementLayer.ExitMovementCost(LocomotorInfo li, CPos cell)
 		{
-			return ends.Contains(cell) ? 0 : int.MaxValue;
+			return ends.Contains(cell) ? (short)0 : PathGraph.MovementCostForUnreachableCell;
 		}
 
 		byte ICustomMovementLayer.GetTerrainIndex(CPos cell)
