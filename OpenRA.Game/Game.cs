@@ -40,6 +40,7 @@ namespace OpenRA
 		public static Settings Settings;
 		public static CursorManager Cursor;
 		public static bool HideCursor;
+
 		static WorldRenderer worldRenderer;
 		static string modLaunchWrapper;
 
@@ -84,7 +85,14 @@ namespace OpenRA
 
 		static void JoinInner(OrderManager om)
 		{
-			OrderManager?.Dispose();
+			// HACK: The shellmap World and OrderManager are owned by the main menu's WorldRenderer instead of Game.
+			// This allows us to switch Game.OrderManager from the shellmap to the new network connection when joining
+			// a lobby, while keeping the OrderManager that runs the shellmap intact.
+			// A matching check in World.Dispose (which is called by WorldRenderer.Dispose) makes sure that we dispose
+			// the shellmap's OM when a lobby game actually starts.
+			if (OrderManager?.World == null || OrderManager.World.Type != WorldType.Shellmap)
+				OrderManager?.Dispose();
+
 			OrderManager = om;
 		}
 
@@ -96,6 +104,20 @@ namespace OpenRA
 		static void JoinLocal()
 		{
 			JoinInner(new OrderManager(new EchoConnection()));
+
+			// Add a spectator client for the local player
+			// On the shellmap this player is controlling the map via scripted orders
+			OrderManager.LobbyInfo.Clients.Add(new Session.Client
+			{
+				Index = OrderManager.Connection.LocalClientId,
+				Name = Settings.Player.Name,
+				PreferredColor = Settings.Player.Color,
+				Color = Settings.Player.Color,
+				Faction = "Random",
+				SpawnPoint = 0,
+				Team = 0,
+				State = Session.ClientState.Ready
+			});
 		}
 
 		// More accurate replacement for Environment.TickCount
@@ -167,10 +189,7 @@ namespace OpenRA
 				map = ModData.PrepareMap(mapUID);
 
 			using (new PerfTimer("NewWorld"))
-			{
 				OrderManager.World = new World(ModData, map, OrderManager, type);
-				OrderManager.FramesAhead = OrderManager.World.OrderLatency;
-			}
 
 			OrderManager.World.GameOver += FinishBenchmark;
 
@@ -463,8 +482,11 @@ namespace OpenRA
 			Renderer.InitializeDepthBuffer(grid);
 
 			Cursor?.Dispose();
-
 			Cursor = new CursorManager(ModData.CursorProvider);
+
+			var metadata = ModData.Manifest.Metadata;
+			if (!string.IsNullOrEmpty(metadata.WindowTitle))
+				Renderer.Window.SetWindowTitle(metadata.WindowTitle);
 
 			PerfHistory.Items["render"].HasNormalTick = false;
 			PerfHistory.Items["batches"].HasNormalTick = false;
@@ -480,27 +502,13 @@ namespace OpenRA
 
 		public static void LoadEditor(string mapUid)
 		{
+			JoinLocal();
 			StartGame(mapUid, WorldType.Editor);
 		}
 
 		public static void LoadShellMap()
 		{
 			var shellmap = ChooseShellmap();
-
-			// Add a spectator client for the local player,
-			// who is controlling the map via scripted orders
-			OrderManager.LobbyInfo.Clients.Add(new Session.Client
-			{
-				Index = OrderManager.Connection.LocalClientId,
-				Name = Settings.Player.Name,
-				PreferredColor = Settings.Player.Color,
-				Color = Settings.Player.Color,
-				Faction = "Random",
-				SpawnPoint = 0,
-				Team = 0,
-				State = Session.ClientState.Ready
-			});
-
 			using (new PerfTimer("StartGame"))
 			{
 				StartGame(shellmap, WorldType.Shellmap);
@@ -585,7 +593,7 @@ namespace OpenRA
 			if (Ui.LastTickTime.ShouldAdvance(tick))
 			{
 				Ui.LastTickTime.AdvanceTickTime(tick);
-				Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, Ui.Tick);
+				Sync.RunUnsynced(world, Ui.Tick);
 				Cursor.Tick();
 			}
 
@@ -597,14 +605,14 @@ namespace OpenRA
 
 					Sound.Tick();
 
-					Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, orderManager.TickImmediate);
+					Sync.RunUnsynced(world, orderManager.TickImmediate);
 
 					if (world == null)
 						return;
 
 					if (orderManager.TryTick())
 					{
-						Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, () =>
+						Sync.RunUnsynced(world, () =>
 						{
 							world.OrderGenerator.Tick(world);
 						});
@@ -616,7 +624,7 @@ namespace OpenRA
 
 					// Wait until we have done our first world Tick before TickRendering
 					if (orderManager.LocalFrameNumber > 0)
-						Sync.RunUnsynced(Settings.Debug.SyncCheckUnsyncedCode, world, () => world.TickRender(worldRenderer));
+						Sync.RunUnsynced(world, () => world.TickRender(worldRenderer));
 				}
 
 				benchmark?.Tick(LocalTick);
