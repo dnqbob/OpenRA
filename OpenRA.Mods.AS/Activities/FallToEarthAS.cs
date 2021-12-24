@@ -8,7 +8,6 @@
  */
 #endregion
 
-using System.Linq;
 using OpenRA.Activities;
 using OpenRA.Mods.AS.Traits;
 using OpenRA.Mods.Common.Traits;

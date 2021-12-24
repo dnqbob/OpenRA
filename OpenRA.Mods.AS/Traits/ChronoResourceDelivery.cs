@@ -60,7 +60,6 @@ namespace OpenRA.Mods.AS.Traits
 	public class ChronoResourceDelivery : ConditionalTrait<ChronoResourceDeliveryInfo>, INotifyHarvesterAction, ITick
 	{
 		CPos? destination = null;
-		CPos harvestedField;
 		int ticksTillCheck = 0;
 		WAngle dockFacing;
 		IFacing facing;
@@ -104,8 +103,6 @@ namespace OpenRA.Mods.AS.Traits
 				ticksTillCheck = 0;
 
 			dockFacing = refineryActor.Trait<IAcceptResources>().DeliveryAngle;
-
-			harvestedField = self.World.Map.CellContaining(self.CenterPosition);
 
 			destination = deliverypos;
 		}

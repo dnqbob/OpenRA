@@ -29,7 +29,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly int EraseDamage = -1;
 
 		[Desc("Types of damage the unit is erased with. Leave empty for no damage types.")]
-		public readonly BitSet<DamageType> DamageTypes = default(BitSet<DamageType>);
+		public readonly BitSet<DamageType> DamageTypes = default;
 
 		[Desc("If set, the required value to warp will be scaled with the health.")]
 		public readonly bool ScaleWithCurrentHealthPercentage = false;

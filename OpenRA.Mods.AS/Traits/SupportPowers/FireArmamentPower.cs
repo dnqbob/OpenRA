@@ -29,7 +29,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly string ArmamentName = "superweapon";
 
 		[Desc("If `AllowMultiple` is `false`, how many instances of this support power are allowed to fire.",
-		      "Actual instances might end up less due to range/etc.")]
+			  "Actual instances might end up less due to range/etc.")]
 		public readonly int MaximumFiringInstances = 1;
 
 		[Desc("Amount of time before detonation to remove the beacon.")]
@@ -87,7 +87,7 @@ namespace OpenRA.Mods.AS.Traits
 			Armaments = self.TraitsImplementing<Armament>().Where(t => t.Info.Name.Contains(FireArmamentPowerInfo.ArmamentName)).ToArray();
 
 			var armamentturrets = Armaments.Select(x => x.Info.Turret).ToHashSet();
-			turreted = self.TraitsImplementing<Turreted>().Where(x => armamentturrets.Contains(x.Name)).Count() > 0;
+			turreted = self.TraitsImplementing<Turreted>().Where(x => armamentturrets.Contains(x.Name)).Any();
 
 			base.Created(self);
 		}
@@ -159,16 +159,16 @@ namespace OpenRA.Mods.AS.Traits
 					() => FractionComplete);
 
 				Action removeBeacon = () => self.World.AddFrameEndTask(w =>
-				                                                       {
-					w.Remove(beacon);
-					beacon = null;
-				});
+																	   {
+																		   w.Remove(beacon);
+																		   beacon = null;
+																	   });
 
 				self.World.AddFrameEndTask(w =>
-				                           {
-					w.Add(beacon);
-					w.Add(new DelayedAction(estimatedTicks - FireArmamentPowerInfo.BeaconRemoveAdvance, removeBeacon));
-				});
+										   {
+											   w.Add(beacon);
+											   w.Add(new DelayedAction(estimatedTicks - FireArmamentPowerInfo.BeaconRemoveAdvance, removeBeacon));
+										   });
 			}
 
 			ticks = 0;

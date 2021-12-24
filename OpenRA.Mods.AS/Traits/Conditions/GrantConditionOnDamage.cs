@@ -19,7 +19,7 @@ namespace OpenRA.Mods.AS.Traits
 	class GrantConditionOnDamageInfo : ConditionalTraitInfo
 	{
 		[Desc("The `DamageTypes` received which are allowed to trigger. If empty, all damages trigger.")]
-		public readonly BitSet<DamageType> Types = default(BitSet<DamageType>);
+		public readonly BitSet<DamageType> Types = default;
 
 		[FieldLoader.Require]
 		[GrantedConditionReference]

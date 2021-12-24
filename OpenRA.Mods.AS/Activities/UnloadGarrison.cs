@@ -68,8 +68,8 @@ namespace OpenRA.Mods.AS.Activities
 
 			// Find the cells that are blocked by transient actors
 			return garrison.CurrentAdjacentCells
-                .Where(c => pos.CanEnterCell(c, null, BlockedByActor.All) != pos.CanEnterCell(c, null, BlockedByActor.None));
-        }
+				.Where(c => pos.CanEnterCell(c, null, BlockedByActor.All) != pos.CanEnterCell(c, null, BlockedByActor.None));
+		}
 
 		protected override void OnFirstRun(Actor self)
 		{
@@ -102,7 +102,7 @@ namespace OpenRA.Mods.AS.Activities
 				foreach (var inu in notifiers)
 					inu.Unloading(self);
 
-				var actor = garrison.Peek(self);
+				var actor = garrison.Peek();
 				var spawn = self.CenterPosition;
 
 				var exitSubCell = ChooseExitSubCell(actor);

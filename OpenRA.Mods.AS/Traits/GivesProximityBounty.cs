@@ -28,11 +28,11 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly PlayerRelationship ValidStances = PlayerRelationship.Neutral | PlayerRelationship.Enemy;
 
 		[Desc("DeathTypes for which a bounty should be granted.",
-		      "Use an empty list (the default) to allow all DeathTypes.")]
+			  "Use an empty list (the default) to allow all DeathTypes.")]
 		public readonly BitSet<DamageType> DeathTypes = default(BitSet<DamageType>);
 
 		[Desc("Bounty types for the ProximityBounty traits which a bounty should be granted.",
-		      "Use an empty list (the default) to allow all of them.")]
+			  "Use an empty list (the default) to allow all of them.")]
 		public readonly BitSet<ProximityBountyType> BountyTypes = default(BitSet<ProximityBountyType>);
 
 		public override object Create(ActorInitializer init) { return new GivesProximityBounty(init.Self, this); }

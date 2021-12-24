@@ -66,18 +66,18 @@ namespace OpenRA.Mods.AS.Traits
 			switch (order.OrderString)
 			{
 				case "Taunt":
-				{
-					if (self.World.LocalPlayer != null)
 					{
-						var rules = self.World.Map.Rules;
-						if (rules.Notifications["taunts"].NotificationsPools.Value.ContainsKey(order.TargetString))
-							Game.Sound.PlayNotification(rules, self.World.LocalPlayer, "Taunts", order.TargetString, self.Owner.Faction.InternalName);
-						else
+						if (self.World.LocalPlayer != null)
+						{
+							var rules = self.World.Map.Rules;
+							if (rules.Notifications["taunts"].NotificationsPools.Value.ContainsKey(order.TargetString))
+								Game.Sound.PlayNotification(rules, self.World.LocalPlayer, "Taunts", order.TargetString, self.Owner.Faction.InternalName);
+							else
 								TextNotificationsManager.Debug("{0} is not a valid taunt.", order.TargetString);
-					}
+						}
 
-					break;
-				}
+						break;
+					}
 			}
 		}
 	}

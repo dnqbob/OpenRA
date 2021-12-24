@@ -8,11 +8,6 @@
  */
 #endregion
 
-using System.Linq;
-using OpenRA.Mods.AS.Activities;
-using OpenRA.Mods.Common.Activities;
-using OpenRA.Mods.Common.Traits;
-using OpenRA.Traits;
 
 /*
 Works without base engine modification.

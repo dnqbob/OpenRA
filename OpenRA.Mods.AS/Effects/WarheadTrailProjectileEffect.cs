@@ -36,8 +36,7 @@ namespace OpenRA.Mods.AS.Effects
 
 		readonly int lifespan, estimatedlifespan;
 		readonly bool forceToGround;
-
-		ContrailRenderable contrail;
+		readonly ContrailRenderable contrail;
 
 		[Sync]
 		WPos projectilepos, lastPos;

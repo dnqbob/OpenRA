@@ -22,15 +22,15 @@ namespace OpenRA.Mods.AS.Lint
 	{
 		void ILintRulesPass.Run(Action<string> emitError, Action<string> emitWarning, ModData modData, Ruleset rules)
 		{
-			Run(emitError, emitWarning, rules);
+			Run(emitError, rules);
 		}
 
 		void ILintServerMapPass.Run(Action<string> emitError, Action<string> emitWarning, ModData modData, MapPreview map, Ruleset mapRules)
 		{
-			Run(emitError, emitWarning, mapRules);
+			Run(emitError, mapRules);
 		}
 
-		void Run(Action<string> emitError, Action<string> emitWarning, Ruleset rules)
+		void Run(Action<string> emitError, Ruleset rules)
 		{
 			foreach (var weaponInfo in rules.Weapons)
 			{

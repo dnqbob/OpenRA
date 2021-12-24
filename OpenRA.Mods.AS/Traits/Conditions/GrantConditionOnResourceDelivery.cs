@@ -26,7 +26,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly int Duration;
 
 		[Desc("ResourceTypes to grant this condition. When empty, all resources trigger.")]
-		public readonly string[] ResourceTypes = { };
+		public readonly string[] ResourceTypes = System.Array.Empty<string>();
 
 		public override object Create(ActorInitializer init) { return new GrantConditionOnResourceDelivery(this); }
 	}

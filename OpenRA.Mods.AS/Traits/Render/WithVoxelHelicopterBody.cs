@@ -21,7 +21,7 @@ using OpenRA.Traits;
 namespace OpenRA.Mods.AS.Traits
 {
 	[Desc("Render an animated voxel based upon the voxel being inair.")]
-	public class WithVoxelHelicopterBodyInfo : PausableConditionalTraitInfo, IRenderActorPreviewVoxelsInfo,  Requires<RenderVoxelsInfo>
+	public class WithVoxelHelicopterBodyInfo : PausableConditionalTraitInfo, IRenderActorPreviewVoxelsInfo, Requires<RenderVoxelsInfo>
 	{
 		public readonly string Sequence = "idle";
 

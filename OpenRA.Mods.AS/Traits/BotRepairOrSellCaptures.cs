@@ -46,7 +46,7 @@ namespace OpenRA.Mods.AS.Traits
 
 			var rb = self.TraitOrDefault<RepairableBuilding>();
 			if (rb != null && health.DamageState != DamageState.Undamaged)
-				 self.World.IssueOrder(new Order("RepairBuilding", newOwner.PlayerActor, Target.FromActor(self), false));
+				self.World.IssueOrder(new Order("RepairBuilding", newOwner.PlayerActor, Target.FromActor(self), false));
 		}
 	}
 }

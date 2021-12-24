@@ -32,7 +32,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly HashSet<string> Types = new HashSet<string>();
 
 		[Desc("A list of actor types that are initially spawned into this actor.")]
-		public readonly string[] InitialUnits = { };
+		public readonly string[] InitialUnits = Array.Empty<string>();
 
 		[Desc("When this actor is sold should all of its garrisoners be unloaded?")]
 		public readonly bool EjectOnSell = true;
@@ -334,7 +334,7 @@ namespace OpenRA.Mods.AS.Traits
 		public bool HasSpace(int weight) { return totalWeight + reservedWeight + weight <= Info.MaxWeight; }
 		public bool IsEmpty() { return garrisonable.Count == 0; }
 
-		public Actor Peek(Actor self) { return garrisonable.Last(); }
+		public Actor Peek() { return garrisonable.Last(); }
 
 		public Actor Unload(Actor self, Actor passenger = null)
 		{
@@ -442,7 +442,7 @@ namespace OpenRA.Mods.AS.Traits
 					positionable.SetPosition(garrisoner, self.Location);
 
 					if (!inAir && positionable.CanEnterCell(self.Location, self, BlockedByActor.None))
-                    {
+					{
 						self.World.AddFrameEndTask(w => w.Add(garrisoner));
 						var nbms = garrisoner.TraitsImplementing<INotifyBlockingMove>();
 						foreach (var nbm in nbms)
