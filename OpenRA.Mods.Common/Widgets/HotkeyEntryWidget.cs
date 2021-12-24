@@ -24,7 +24,7 @@ namespace OpenRA.Mods.Common.Widgets
 		public int LeftMargin = 5;
 		public int RightMargin = 5;
 
-		public Action OnEscKey = () => { };
+		public Action<KeyInput> OnEscKey = _ => { };
 		public Action OnLoseFocus = () => { };
 
 		public Func<bool> IsDisabled = () => false;
@@ -88,7 +88,6 @@ namespace OpenRA.Mods.Common.Widgets
 			Keycode.RCTRL, Keycode.LCTRL,
 			Keycode.RALT, Keycode.LALT,
 			Keycode.RGUI, Keycode.LGUI,
-			Keycode.RETURN, Keycode.KP_ENTER
 		};
 
 		public override bool HandleKeyPress(KeyInput e)
@@ -102,7 +101,7 @@ namespace OpenRA.Mods.Common.Widgets
 			switch (e.Key)
 			{
 				case Keycode.ESCAPE:
-					OnEscKey();
+					OnEscKey(e);
 					break;
 
 				default:

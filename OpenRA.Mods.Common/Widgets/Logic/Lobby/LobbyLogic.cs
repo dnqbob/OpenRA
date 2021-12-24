@@ -406,7 +406,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			chatTextField.MaxLength = UnitOrders.ChatMessageMaxLength;
 
 			chatTextField.TakeKeyboardFocus();
-			chatTextField.OnEnterKey = () =>
+			chatTextField.OnEnterKey = _ =>
 			{
 				if (chatTextField.Text.Length == 0)
 					return true;
@@ -423,19 +423,20 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				return true;
 			};
 
-			chatTextField.OnTabKey = () =>
+			chatTextField.OnTabKey = e =>
 			{
-				var previousText = chatTextField.Text;
-				chatTextField.Text = tabCompletion.Complete(chatTextField.Text);
-				chatTextField.CursorPosition = chatTextField.Text.Length;
-
-				if (chatTextField.Text == previousText)
-					return SwitchTeamChat();
+				if (!chatMode.Key.IsActivatedBy(e) || chatMode.IsDisabled())
+				{
+					chatTextField.Text = tabCompletion.Complete(chatTextField.Text);
+					chatTextField.CursorPosition = chatTextField.Text.Length;
+				}
 				else
-					return true;
+					chatMode.OnKeyPress(e);
+
+				return true;
 			};
 
-			chatTextField.OnEscKey = () => { chatTextField.Text = ""; return true; };
+			chatTextField.OnEscKey = _ => { chatTextField.Text = ""; return true; };
 
 			lobbyChatPanel = lobby.Get<ScrollPanelWidget>("CHAT_DISPLAY");
 			chatTemplate = lobbyChatPanel.Get("CHAT_TEMPLATE");
@@ -499,13 +500,6 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				lobbyChatPanel.ScrollToBottom(smooth: true);
 
 			Game.Sound.PlayNotification(modRules, null, "Sounds", chatLineSound, null);
-		}
-
-		bool SwitchTeamChat()
-		{
-			if (!disableTeamChat)
-				teamChat ^= true;
-			return true;
 		}
 
 		void UpdateCurrentMap()
