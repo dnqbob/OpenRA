@@ -32,7 +32,7 @@ namespace OpenRA.Mods.AS.Traits
 		readonly Shroud.SourceType rstiotype;
 
 		public RevealsShroudToIntelligenceOwner(Actor self, RevealsShroudToIntelligenceOwnerInfo info)
-			: base(self, info)
+			: base(info)
 		{
 			RSTIOInfo = info;
 			rstiotype = info.RevealGeneratedShroud ? Shroud.SourceType.Visibility
