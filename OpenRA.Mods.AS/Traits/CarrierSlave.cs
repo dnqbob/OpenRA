@@ -49,7 +49,6 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			// Cancel whatever else self was doing and return.
-			var target = Target.FromActor(Master);
 			self.QueueActivity(false, new EnterCarrierMaster(self, Master, spawnerMaster));
 		}
 
@@ -57,15 +56,6 @@ namespace OpenRA.Mods.AS.Traits
 		{
 			base.LinkMaster(self, master, spawnerMaster);
 			this.spawnerMaster = spawnerMaster as CarrierMaster;
-		}
-
-		bool NeedToReload(Actor self)
-		{
-			// The unit may not have ammo but will have unlimited ammunitions.
-			if (ammoPools.Length == 0)
-				return false;
-
-			return ammoPools.All(x => !x.HasAmmo);
 		}
 
 		void INotifyIdle.TickIdle(Actor self)

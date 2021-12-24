@@ -66,11 +66,11 @@ namespace OpenRA.Mods.AS.Traits
 				CurrentMuzzleFacing = () => WAngle.Zero,
 
 				DamageModifiers = !spawner.IsDead ? spawner.TraitsImplementing<IFirepowerModifier>()
-						.Select(a => a.GetFirepowerModifier()).ToArray() : new int[0],
+						.Select(a => a.GetFirepowerModifier()).ToArray() : System.Array.Empty<int>(),
 
-				InaccuracyModifiers = new int[0],
+				InaccuracyModifiers = System.Array.Empty<int>(),
 
-				RangeModifiers = new int[0],
+				RangeModifiers = System.Array.Empty<int>(),
 
 				Source = self.CenterPosition,
 				CurrentSource = () => self.CenterPosition,

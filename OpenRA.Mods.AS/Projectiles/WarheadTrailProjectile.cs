@@ -10,7 +10,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using OpenRA.GameRules;
 using OpenRA.Graphics;
 using OpenRA.Mods.AS.Effects;
@@ -171,7 +170,7 @@ namespace OpenRA.Mods.AS.Projectiles
 
 			mindelay = args.Weapon.MinRange.Length / speed.Length;
 
-			projectiles = new WarheadTrailProjectileEffect[info.Offsets.Count()];
+			projectiles = new WarheadTrailProjectileEffect[info.Offsets.Length];
 			var range = Common.Util.ApplyPercentageModifiers(args.Weapon.Range.Length, args.RangeModifiers);
 			var mainFacing = (targetpos - sourcepos).Yaw.Facing + 64;
 
@@ -181,7 +180,7 @@ namespace OpenRA.Mods.AS.Projectiles
 			// target that will be assigned
 			Target target;
 
-			for (int i = 0; i < info.Offsets.Count(); i++)
+			for (var i = 0; i < info.Offsets.Length; i++)
 			{
 				switch (info.FireMode)
 				{

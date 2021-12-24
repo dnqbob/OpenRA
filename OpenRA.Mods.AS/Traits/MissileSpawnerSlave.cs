@@ -8,7 +8,6 @@
  */
 #endregion
 
-
 /*
 Works without base engine modification.
 However, Mods.Common\Activities\Air\Land.cs is modified to support the air units to land "mid air!"

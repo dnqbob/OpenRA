@@ -65,7 +65,7 @@ namespace OpenRA.Mods.AS.Warheads
 				var devMode = world.LocalPlayer.PlayerActor.TraitOrDefault<DebugVisualizations>();
 				if (devMode != null && devMode.CombatGeometry)
 				{
-					WDist[] rng = Exts.MakeArray(Range.Length, i => WDist.FromCells(Range[i].Length));
+					var rng = Exts.MakeArray(Range.Length, i => WDist.FromCells(Range[i].Length));
 					world.WorldActor.Trait<WarheadDebugOverlay>().AddImpact(pos, rng, DebugOverlayColor);
 				}
 			}
@@ -80,7 +80,7 @@ namespace OpenRA.Mods.AS.Warheads
 
 				foreach (var cell in affectedCells)
 				{
-					int mul = GetIntensityFalloff((pos - world.Map.CenterOfCell(cell)).Length);
+					var mul = GetIntensityFalloff((pos - world.Map.CenterOfCell(cell)).Length);
 					IncreaseTintedCellLevel(cell, mul, Falloff[i], raLayer);
 				}
 			}

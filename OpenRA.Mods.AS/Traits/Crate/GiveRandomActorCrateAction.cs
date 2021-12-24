@@ -62,7 +62,7 @@ namespace OpenRA.Mods.AS.Traits
 
 			validActors = eligibleActors.Where(a => ValidActor(a, cells));
 
-			return validActors.Count() > 0 ? true : false;
+			return validActors.Any();
 		}
 
 		bool ValidActor(ActorInfo a, IEnumerable<CPos> cells)
