@@ -229,7 +229,7 @@ namespace OpenRA.Mods.AS.Projectiles
 
 		bool ShouldExplode(World world)
 		{
-			if (info.Blockable && BlocksProjectiles.AnyBlockingActorsBetween(world, lastPos, pos, info.Width,
+			if (info.Blockable && BlocksProjectiles.AnyBlockingActorsBetween(world, args.SourceActor.Owner, lastPos, pos, info.Width,
 				out var blockedPos))
 			{
 				pos = blockedPos;
