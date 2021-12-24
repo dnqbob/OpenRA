@@ -30,6 +30,8 @@ EnableSyncReports="${EnableSyncReports:-"False"}"
 EnableLintChecks="${EnableLintChecks:-"True"}"
 ShareAnonymizedIPs="${ShareAnonymizedIPs:-"True"}"
 
+JoinChatDelay="${JoinChatDelay:-"5000"}"
+
 SupportDir="${SupportDir:-""}"
 
 while true; do
@@ -46,5 +48,6 @@ while true; do
      Server.EnableSyncReports="$EnableSyncReports" \
      Server.EnableLintChecks="$EnableLintChecks" \
      Server.ShareAnonymizedIPs="$ShareAnonymizedIPs" \
+     Server.JoinChatDelay="$JoinChatDelay" \
      Engine.SupportDir="$SupportDir"
 done
