@@ -187,7 +187,7 @@ namespace OpenRA.Mods.AS.Traits
 
 			tc.Ticks = updateDelay;
 
-			int dlevel = FalloutScale * tc.Level / 1000;
+			var dlevel = FalloutScale * tc.Level / 1000;
 
 			// has to be decreased by at least 1 so that it disappears eventually.
 			if (dlevel < 1)

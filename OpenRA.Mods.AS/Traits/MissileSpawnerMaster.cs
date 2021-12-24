@@ -109,8 +109,7 @@ namespace OpenRA.Mods.AS.Traits
 
 			SpawnIntoWorld(self, se.Actor, self.CenterPosition);
 
-			Stack<int> spawnContainToken;
-			if (spawnContainTokens.TryGetValue(a.Info.Name, out spawnContainToken) && spawnContainToken.Any())
+			if (spawnContainTokens.TryGetValue(a.Info.Name, out var spawnContainToken) && spawnContainToken.Any())
 				self.RevokeCondition(spawnContainToken.Pop());
 
 			if (loadedTokens.Any())
@@ -141,9 +140,7 @@ namespace OpenRA.Mods.AS.Traits
 		{
 			base.Replenish(self, entry);
 
-			string spawnContainCondition;
-
-			if (MissileSpawnerMasterInfo.SpawnContainConditions.TryGetValue(entry.Actor.Info.Name, out spawnContainCondition))
+			if (MissileSpawnerMasterInfo.SpawnContainConditions.TryGetValue(entry.Actor.Info.Name, out var spawnContainCondition))
 				spawnContainTokens.GetOrAdd(entry.Actor.Info.Name).Push(self.GrantCondition(spawnContainCondition));
 
 			loadedTokens.Push(self.GrantCondition(MissileSpawnerMasterInfo.LoadedCondition));

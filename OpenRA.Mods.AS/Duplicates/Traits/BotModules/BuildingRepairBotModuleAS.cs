@@ -18,12 +18,12 @@ namespace OpenRA.Mods.AS.Traits
 	[Desc("Manages AI repairing base buildings.")]
 	public class BuildingRepairBotModuleASInfo : ConditionalTraitInfo
 	{
-		public override object Create(ActorInitializer init) { return new BuildingRepairBotModuleAS(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new BuildingRepairBotModuleAS(this); }
 	}
 
 	public class BuildingRepairBotModuleAS : ConditionalTrait<BuildingRepairBotModuleASInfo>, IBotRespondToAttack
 	{
-		public BuildingRepairBotModuleAS(Actor self, BuildingRepairBotModuleASInfo info)
+		public BuildingRepairBotModuleAS(BuildingRepairBotModuleASInfo info)
 			: base(info) { }
 
 		void IBotRespondToAttack.RespondToAttack(IBot bot, Actor self, AttackInfo e)

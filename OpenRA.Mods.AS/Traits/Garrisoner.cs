@@ -121,12 +121,10 @@ namespace OpenRA.Mods.AS.Traits
 
 		void INotifyEnteredGarrison.OnEnteredGarrison(Actor self, Actor garrison)
 		{
-			string specificGarrisonCondition;
-
 			if (anyGarrisonToken == Actor.InvalidConditionToken)
 				anyGarrisonToken = self.GrantCondition(Info.GarrisonCondition);
 
-			if (specificGarrisonToken == Actor.InvalidConditionToken && Info.GarrisonConditions.TryGetValue(garrison.Info.Name, out specificGarrisonCondition))
+			if (specificGarrisonToken == Actor.InvalidConditionToken && Info.GarrisonConditions.TryGetValue(garrison.Info.Name, out var specificGarrisonCondition))
 				specificGarrisonToken = self.GrantCondition(specificGarrisonCondition);
 
 			// Allow scripted / initial actors to move from the unload point back into the cell grid on unload

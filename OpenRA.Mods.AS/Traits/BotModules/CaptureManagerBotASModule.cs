@@ -161,7 +161,7 @@ namespace OpenRA.Mods.AS.Traits
 
 					var priorityCaptures = Math.Min(capturers.Count(), priorityTargets.Count());
 
-					for (int i = 0; i < priorityCaptures; i++)
+					for (var i = 0; i < priorityCaptures; i++)
 					{
 						var capturer = capturers.First();
 						var priorityTarget = priorityTargets.First();

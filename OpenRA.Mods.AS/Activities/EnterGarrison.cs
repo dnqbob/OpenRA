@@ -81,7 +81,7 @@ namespace OpenRA.Mods.AS.Activities
 				if (targetActor != enterActor)
 					return;
 
-				if (!enterGarrison.CanLoad(enterActor, self))
+				if (!enterGarrison.CanLoad(self))
 					return;
 
 				enterGarrison.Load(enterActor, self);

@@ -374,8 +374,8 @@ namespace OpenRA.Mods.AS.UtilityCommands
 			var mapSection = file.GetSection("IsoMapPack5");
 
 			var data = Convert.FromBase64String(mapSection.Aggregate(string.Empty, (a, b) => a + b.Value));
-			int cells = (fullSize.X * 2 - 1) * fullSize.Y;
-			int lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
+			var cells = (fullSize.X * 2 - 1) * fullSize.Y;
+			var lzoPackSize = cells * 11 + 4; // last 4 bytes contains a lzo pack header saying no more data is left
 			var isoMapPack = new byte[lzoPackSize];
 			UnpackLZO(data, isoMapPack);
 
@@ -390,8 +390,8 @@ namespace OpenRA.Mods.AS.UtilityCommands
 				var z = mf.ReadUInt8();
 				/*var zero2 = */mf.ReadUInt8();
 
-				int dx = rx - ry + fullSize.X - 1;
-				int dy = rx + ry - fullSize.X - 1;
+				var dx = rx - ry + fullSize.X - 1;
+				var dy = rx + ry - fullSize.X - 1;
 				var mapCell = new MPos(dx / 2, dy);
 				var cell = mapCell.ToCPos(map);
 
@@ -446,8 +446,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 				if (overlayType == 0xFF)
 					continue;
 
-				string actorType;
-				if (OverlayToActor.TryGetValue(overlayType, out actorType))
+				if (OverlayToActor.TryGetValue(overlayType, out var actorType))
 				{
 					var shape = new Size(1, 1);
 					if (OverlayShapes.TryGetValue(overlayType, out shape))
@@ -456,16 +455,14 @@ namespace OpenRA.Mods.AS.UtilityCommands
 						var aboveType = overlayPack[overlayIndex[cell - new CVec(1, 0)]];
 						if (shape.Width > 1 && aboveType != 0xFF)
 						{
-							string a;
-							if (OverlayToActor.TryGetValue(aboveType, out a) && a == actorType)
+							if (OverlayToActor.TryGetValue(aboveType, out var a) && a == actorType)
 								continue;
 						}
 
 						var leftType = overlayPack[overlayIndex[cell - new CVec(0, 1)]];
 						if (shape.Height > 1 && leftType != 0xFF)
 						{
-							string a;
-							if (OverlayToActor.TryGetValue(leftType, out a) && a == actorType)
+							if (OverlayToActor.TryGetValue(leftType, out var a) && a == actorType)
 								continue;
 						}
 					}
@@ -476,8 +473,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 						new OwnerInit("Neutral")
 					};
 
-					DamageState damageState;
-					if (OverlayToHealth.TryGetValue(overlayType, out damageState))
+					if (OverlayToHealth.TryGetValue(overlayType, out var damageState))
 					{
 						var health = 100;
 						if (damageState == DamageState.Critical)
@@ -523,8 +519,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 				var dy = rx + ry - fullSize.X - 1;
 				var cell = new MPos(dx / 2, dy).ToCPos(map);
 
-				int wpindex;
-				var ar = new ActorReference((!int.TryParse(kv.Key, out wpindex) || wpindex > 7) ? "waypoint" : "mpspawn")
+				var ar = new ActorReference((!int.TryParse(kv.Key, out var wpindex) || wpindex > 7) ? "waypoint" : "mpspawn")
 				{
 					new LocationInit(cell),
 					new OwnerInit("Neutral")
@@ -655,8 +650,7 @@ namespace OpenRA.Mods.AS.UtilityCommands
 			}
 
 			// Merge Ground into Ambient
-			float ground = 0;
-			if (parsed.TryGetValue("Ground", out ground))
+			if (parsed.TryGetValue("Ground", out var ground))
 			{
 				if (!parsed.ContainsKey("Ambient"))
 					parsed["Ambient"] = 1f;

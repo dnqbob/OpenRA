@@ -98,10 +98,7 @@ namespace OpenRA.Mods.AS.Traits
 				case "turret":
 					int turretIndex;
 					var parse = int.TryParse(message.Split(' ')[1], out turretIndex);
-					if (parse = false || turretIndex >= turrets.Length)
-						turret = -1;
-					else
-						turret = turretIndex;
+					turret = !parse || turretIndex >= turrets.Length ? -1 : turretIndex;
 					enabled = true;
 					break;
 
@@ -110,9 +107,9 @@ namespace OpenRA.Mods.AS.Traits
 					if (setoffsets.Length != 3)
 						break;
 
-					int[] setoffset = new int[3];
-					for (int i = 0; i < setoffsets.Length; i++)
-						int.TryParse(setoffsets[i], out setoffset[i]);
+					var setoffset = new int[3];
+					for (var i = 0; i < setoffsets.Length; i++)
+						_ = int.TryParse(setoffsets[i], out setoffset[i]);
 
 					devOffset = new WVec(setoffset[0], setoffset[1], setoffset[2]);
 					enabled = true;
@@ -123,9 +120,9 @@ namespace OpenRA.Mods.AS.Traits
 					if (addoffsets.Length != 3)
 						break;
 
-					int[] addoffset = new int[3];
-					for (int i = 0; i < addoffsets.Length; i++)
-						int.TryParse(addoffsets[i], out addoffset[i]);
+					var addoffset = new int[3];
+					for (var i = 0; i < addoffsets.Length; i++)
+						_ = int.TryParse(addoffsets[i], out addoffset[i]);
 
 					devOffset += new WVec(addoffset[0], addoffset[1], addoffset[2]);
 					enabled = true;

@@ -64,7 +64,7 @@ namespace OpenRA.Mods.AS.Graphics
 			// QuantizationCont * forwardStep == One cycle of beam in src2target direction.
 			var forwardStep = (wavelength.Length * sourceToTarget) / (quantizationCount * sourceToTarget.Length);
 
-			int cycleCnt = sourceToTarget.Length / wavelength.Length;
+			var cycleCnt = sourceToTarget.Length / wavelength.Length;
 			if (sourceToTarget.Length % wavelength.Length != 0)
 				cycleCnt += 1; // I'm emulating math.ceil
 
