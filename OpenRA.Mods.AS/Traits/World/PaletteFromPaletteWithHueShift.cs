@@ -66,16 +66,16 @@ namespace OpenRA.Mods.AS.Traits
 
 		public Color GetRemappedColor(Color original, int index)
 		{
-			original.ToAhsv(out var a, out var h, out var s, out var v);
+			var remap = original.ToAhsv();
 
-			h += hueoffset;
-			if (h > 360.0f)
-				h -= 360.0f;
+			remap.H += hueoffset;
+			if (remap.H > 360.0f)
+				remap.H -= 360.0f;
 
-			if (h < 0.0f)
-				h += 360.0f;
+			if (remap.H < 0.0f)
+				remap.H += 360.0f;
 
-			return Color.FromAhsv(a, h, s, v);
+			return Color.FromAhsv(original.A, remap.H, remap.S, remap.V);
 		}
 	}
 }
