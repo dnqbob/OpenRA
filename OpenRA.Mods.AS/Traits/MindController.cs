@@ -35,7 +35,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly string ControllingCondition;
 
 		[Desc("The sound played when the unit is mindcontrolled.")]
-		public readonly string[] Sounds = { };
+		public readonly string[] Sounds = Array.Empty<string>();
 
 		public override object Create(ActorInitializer init) { return new MindController(init.Self, this); }
 	}

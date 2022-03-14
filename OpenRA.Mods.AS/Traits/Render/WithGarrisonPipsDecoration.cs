@@ -46,6 +46,7 @@ namespace OpenRA.Mods.AS.Traits.Render
 
 	public class WithGarrisonPipsDecoration : WithDecorationBase<WithGarrisonPipsDecorationInfo>
 	{
+		readonly Actor self;
 		readonly Garrisonable garrisonable;
 		readonly Animation pips;
 		readonly int pipCount;
@@ -53,6 +54,7 @@ namespace OpenRA.Mods.AS.Traits.Render
 		public WithGarrisonPipsDecoration(Actor self, WithGarrisonPipsDecorationInfo info)
 			: base(self, info)
 		{
+			this.self = self;
 			garrisonable = self.Trait<Garrisonable>();
 			pipCount = info.PipCount > 0 ? info.PipCount : garrisonable.Info.MaxWeight;
 			pips = new Animation(self.World, info.Image);
