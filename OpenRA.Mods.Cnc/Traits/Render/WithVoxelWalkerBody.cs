@@ -20,7 +20,7 @@ using OpenRA.Traits;
 
 namespace OpenRA.Mods.Cnc.Traits.Render
 {
-	public class WithVoxelWalkerBodyInfo : TraitInfo, IRenderActorPreviewVoxelsInfo,  Requires<RenderVoxelsInfo>, Requires<IMoveInfo>, Requires<IFacingInfo>
+	public class WithVoxelWalkerBodyInfo : PausableConditionalTraitInfo, IRenderActorPreviewVoxelsInfo,  Requires<RenderVoxelsInfo>, Requires<IMoveInfo>, Requires<IFacingInfo>
 	{
 		public readonly string Sequence = "idle";
 
@@ -44,18 +44,18 @@ namespace OpenRA.Mods.Cnc.Traits.Render
 		}
 	}
 
-	public class WithVoxelWalkerBody : ITick, IActorPreviewInitModifier, IAutoMouseBounds
+	public class WithVoxelWalkerBody : PausableConditionalTrait<WithVoxelWalkerBodyInfo>, ITick, IActorPreviewInitModifier, IAutoMouseBounds
 	{
-		readonly WithVoxelWalkerBodyInfo info;
 		readonly IMove movement;
 		readonly ModelAnimation modelAnimation;
 		readonly RenderVoxels rv;
 
-		uint tick, frame, frames;
+		uint tick, frame;
+		readonly uint frames;
 
 		public WithVoxelWalkerBody(Actor self, WithVoxelWalkerBodyInfo info)
+			: base(info)
 		{
-			this.info = info;
 			movement = self.Trait<IMove>();
 
 			var body = self.Trait<BodyOrientation>();
@@ -65,18 +65,21 @@ namespace OpenRA.Mods.Cnc.Traits.Render
 			frames = model.Frames;
 			modelAnimation = new ModelAnimation(model, () => WVec.Zero,
 				() => body.QuantizeOrientation(self, self.Orientation),
-				() => false, () => frame, info.ShowShadow);
+				() => IsTraitDisabled, () => frame, info.ShowShadow);
 
 			rv.Add(modelAnimation);
 		}
 
 		void ITick.Tick(Actor self)
 		{
+			if (IsTraitDisabled || IsTraitPaused)
+				return;
+
 			if (movement.CurrentMovementTypes.HasMovementType(MovementType.Horizontal)
 				|| movement.CurrentMovementTypes.HasMovementType(MovementType.Turn))
 				tick++;
 
-			if (tick < info.TickRate)
+			if (tick < Info.TickRate)
 				return;
 
 			tick = 0;

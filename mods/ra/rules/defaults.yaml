@@ -433,7 +433,7 @@
 		Categories: Infantry
 	EdibleByLeap:
 	DetectCloaked:
-		CloakTypes: Cloak
+		DetectionTypes: Cloak
 		Range: 1c0
 
 ^Soldier:
@@ -450,6 +450,7 @@
 		IdleSequences: idle1,idle2
 		StandSequences: stand,stand2
 	AttackFrontal:
+		FacingTolerance: 0
 
 ^CivInfantry:
 	Inherits: ^Infantry
@@ -480,6 +481,7 @@
 	Armament:
 		Weapon: Pistol
 	AttackFrontal:
+		FacingTolerance: 0
 	WithInfantryBody:
 		DefaultAttackSequence: shoot
 
@@ -1190,7 +1192,7 @@
 		CloakSound:
 		UncloakSound:
 		Palette:
-		CloakTypes: Mine
+		DetectionTypes: Mine
 		InitialDelay: 0
 	Tooltip:
 		Name: Mine

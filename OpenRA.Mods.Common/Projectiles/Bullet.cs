@@ -127,7 +127,7 @@ namespace OpenRA.Mods.Common.Projectiles
 		readonly float3 shadowColor;
 		readonly float shadowAlpha;
 
-		ContrailRenderable contrail;
+		readonly ContrailRenderable contrail;
 
 		[Sync]
 		WPos pos, lastPos, target, source;
@@ -188,7 +188,7 @@ namespace OpenRA.Mods.Common.Projectiles
 			remainingBounces = info.BounceCount;
 
 			shadowColor = new float3(info.ShadowColor.R, info.ShadowColor.G, info.ShadowColor.B) / 255f;
-			shadowAlpha = info.ShadowColor.A;
+			shadowAlpha = info.ShadowColor.A / 255f;
 		}
 
 		WAngle GetEffectiveFacing()
@@ -293,21 +293,22 @@ namespace OpenRA.Mods.Common.Projectiles
 			var world = args.SourceActor.World;
 			if (!world.FogObscures(pos))
 			{
-				if (info.Shadow)
-				{
-					var dat = world.Map.DistanceAboveTerrain(pos);
-					var shadowPos = pos - new WVec(0, 0, dat.Length);
-					foreach (var r in anim.Render(shadowPos, wr.Palette(info.Palette)))
-						yield return ((IModifyableRenderable)r)
-							.WithTint(shadowColor, ((IModifyableRenderable)r).TintModifiers | TintModifiers.ReplaceColor)
-							.WithAlpha(shadowAlpha);
-				}
-
 				var paletteName = info.Palette;
 				if (paletteName != null && info.IsPlayerPalette)
 					paletteName += args.SourceActor.Owner.InternalName;
 
 				var palette = wr.Palette(paletteName);
+
+				if (info.Shadow)
+				{
+					var dat = world.Map.DistanceAboveTerrain(pos);
+					var shadowPos = pos - new WVec(0, 0, dat.Length);
+					foreach (var r in anim.Render(shadowPos, palette))
+						yield return ((IModifyableRenderable)r)
+							.WithTint(shadowColor, ((IModifyableRenderable)r).TintModifiers | TintModifiers.ReplaceColor)
+							.WithAlpha(shadowAlpha);
+				}
+
 				foreach (var r in anim.Render(pos, palette))
 					yield return r;
 			}

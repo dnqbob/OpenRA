@@ -65,6 +65,12 @@ namespace OpenRA.Mods.Common.Traits
 		[Desc("Display order for the facing slider in the map editor")]
 		public readonly int EditorFacingDisplayOrder = 3;
 
+		[Desc("Can move backward if possible")]
+		public readonly bool CanMoveBackward = false;
+
+		[Desc("After how many ticks the actor will turn forward during backoff")]
+		public readonly int BackwardDuration = 40;
+
 		[ConsumedConditionReference]
 		[Desc("Boolean expression defining the condition under which the regular (non-force) move cursor is disabled.")]
 		public readonly BooleanExpression RequireForceMoveCondition = null;
@@ -653,7 +659,7 @@ namespace OpenRA.Mods.Common.Traits
 			CPos cell;
 			SubCell subCell;
 			WPos pos;
-			int delay;
+			readonly int delay;
 
 			public ReturnToCellActivity(Actor self, int delay = 0, bool recalculateSubCell = false)
 			{
@@ -806,7 +812,6 @@ namespace OpenRA.Mods.Common.Traits
 				notifyCrushed.Trait.WarnCrush(notifyCrushed.Actor, self, Info.LocomotorInfo.Crushes);
 		}
 
-		public Activity ScriptedMove(CPos cell) { return new Move(self, cell); }
 		public Activity MoveTo(Func<BlockedByActor, List<CPos>> pathFunc) { return new Move(self, pathFunc); }
 
 		Activity LocalMove(Actor self, WPos fromPos, WPos toPos, CPos cell)
@@ -828,9 +833,8 @@ namespace OpenRA.Mods.Common.Traits
 				return above;
 
 			List<CPos> path;
-			using (var search = PathSearch.Search(self.World, Locomotor, self, BlockedByActor.All,
-					loc => loc.Layer == 0 && CanEnterCell(loc))
-				.FromPoint(self.Location))
+			using (var search = PathSearch.ToTargetCellByPredicate(
+				self.World, Locomotor, self, new[] { self.Location }, loc => loc.Layer == 0 && CanEnterCell(loc), BlockedByActor.All))
 				path = Pathfinder.FindPath(search);
 
 			if (path.Count > 0)

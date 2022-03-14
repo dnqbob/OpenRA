@@ -22,10 +22,10 @@ namespace OpenRA
 
 	public static class Platform
 	{
-		public static PlatformType CurrentPlatform => currentPlatform.Value;
+		public static PlatformType CurrentPlatform => LazyCurrentPlatform.Value;
 		public static readonly Guid SessionGUID = Guid.NewGuid();
 
-		static Lazy<PlatformType> currentPlatform = Exts.Lazy(GetCurrentPlatform);
+		static readonly Lazy<PlatformType> LazyCurrentPlatform = Exts.Lazy(GetCurrentPlatform);
 
 		static bool engineDirAccessed;
 		static string engineDir;
@@ -43,9 +43,12 @@ namespace OpenRA
 
 			try
 			{
-				var psi = new ProcessStartInfo("uname", "-s");
-				psi.UseShellExecute = false;
-				psi.RedirectStandardOutput = true;
+				var psi = new ProcessStartInfo("uname", "-s")
+				{
+					UseShellExecute = false,
+					RedirectStandardOutput = true
+				};
+
 				var p = Process.Start(psi);
 				var kernelName = p.StandardOutput.ReadToEnd();
 				if (kernelName.Contains("Darwin"))

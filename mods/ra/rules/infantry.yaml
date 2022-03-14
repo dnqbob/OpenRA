@@ -511,6 +511,7 @@ MECH:
 		ForceTargetRelationships: None
 	AttackFrontal:
 		Voice: Action
+		FacingTolerance: 0
 	CaptureManager:
 	Captures:
 		CaptureTypes: husk
@@ -574,6 +575,7 @@ GNRL:
 		Voice: Move
 	AttackFrontal:
 		Voice: Attack
+		FacingTolerance: 0
 	AttackMove:
 		Voice: Move
 	Passenger:
@@ -641,7 +643,7 @@ THF:
 		InitialDelay: 250
 		CloakDelay: 120
 		UncloakOn: Attack, Unload, Infiltrate, Demolish, Move
-		CloakTypes: Cloak
+		DetectionTypes: Cloak
 		IsPlayerPalette: true
 		PauseOnCondition: cloak-force-disabled
 	GrantConditionOnDamageState@UNCLOAK:
@@ -682,6 +684,7 @@ SHOK:
 		ProneOffset: 227,0,-245
 	AttackFrontal:
 		Voice: Attack
+		FacingTolerance: 0
 	AttackMove:
 		Voice: Move
 	Passenger:
@@ -818,6 +821,7 @@ Ant:
 	AutoTarget:
 		ScanRadius: 5
 	AttackFrontal:
+		FacingTolerance: 0
 	WithInfantryBody:
 		DefaultAttackSequence: bite
 	Armament:

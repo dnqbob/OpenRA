@@ -192,16 +192,16 @@ namespace OpenRA.Mods.Common.Projectiles
 		int ticks;
 
 		int ticksToNextSmoke;
-		ContrailRenderable contrail;
-		string trailPalette;
+		readonly ContrailRenderable contrail;
+		readonly string trailPalette;
 
 		States state;
 		bool targetPassedBy;
-		bool lockOn;
+		readonly bool lockOn;
 		bool allowPassBy; // TODO: use this also with high minimum launch angle settings
 
 		WPos targetPosition;
-		WVec offset;
+		readonly WVec offset;
 
 		WVec tarVel;
 		WVec predVel;
@@ -213,7 +213,7 @@ namespace OpenRA.Mods.Common.Projectiles
 		int speed;
 		int loopRadius;
 		WDist distanceCovered;
-		WDist rangeLimit;
+		readonly WDist rangeLimit;
 
 		WAngle renderFacing;
 
@@ -275,7 +275,7 @@ namespace OpenRA.Mods.Common.Projectiles
 				trailPalette += args.SourceActor.Owner.InternalName;
 
 			shadowColor = new float3(info.ShadowColor.R, info.ShadowColor.G, info.ShadowColor.B) / 255f;
-			shadowAlpha = info.ShadowColor.A;
+			shadowAlpha = info.ShadowColor.A / 255f;
 		}
 
 		static int LoopRadius(int speed, int rot)
@@ -927,17 +927,22 @@ namespace OpenRA.Mods.Common.Projectiles
 			var world = args.SourceActor.World;
 			if (!world.FogObscures(pos))
 			{
+				var paletteName = info.Palette;
+				if (paletteName != null && info.IsPlayerPalette)
+					paletteName += args.SourceActor.Owner.InternalName;
+
+				var palette = wr.Palette(paletteName);
+
 				if (info.Shadow)
 				{
 					var dat = world.Map.DistanceAboveTerrain(pos);
 					var shadowPos = pos - new WVec(0, 0, dat.Length);
-					foreach (var r in anim.Render(shadowPos, wr.Palette(info.Palette)))
+					foreach (var r in anim.Render(shadowPos, palette))
 						yield return ((IModifyableRenderable)r)
 							.WithTint(shadowColor, ((IModifyableRenderable)r).TintModifiers | TintModifiers.ReplaceColor)
 							.WithAlpha(shadowAlpha);
 				}
 
-				var palette = wr.Palette(info.Palette + (info.IsPlayerPalette ? args.SourceActor.Owner.InternalName : ""));
 				foreach (var r in anim.Render(pos, palette))
 					yield return r;
 			}

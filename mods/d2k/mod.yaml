@@ -144,6 +144,7 @@ Hotkeys:
 	common|hotkeys/supportpowers.yaml
 	common|hotkeys/viewport.yaml
 	common|hotkeys/chat.yaml
+	common|hotkeys/control-groups.yaml
 	d2k|hotkeys.yaml
 
 LoadScreen: LogoStripeLoadScreen
@@ -214,7 +215,9 @@ SpriteSequenceFormat: DefaultSpriteSequence
 ModelSequenceFormat: PlaceholderModelSequence
 
 AssetBrowser:
-	SupportedExtensions: .shp, .r8, .vqa
+	SpriteExtensions: .shp, .r8
+	AudioExtensions: .aud, .wav
+	VideoExtensions: .vqa
 
 GameSpeeds:
 	DefaultSpeed: default

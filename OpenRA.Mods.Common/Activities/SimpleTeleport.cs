@@ -10,13 +10,13 @@
 #endregion
 
 using OpenRA.Activities;
-using OpenRA.Traits;
+using OpenRA.Mods.Common.Traits;
 
 namespace OpenRA.Mods.Common.Activities
 {
 	public class SimpleTeleport : Activity
 	{
-		CPos destination;
+		readonly CPos destination;
 
 		public SimpleTeleport(CPos destination) { this.destination = destination; }
 

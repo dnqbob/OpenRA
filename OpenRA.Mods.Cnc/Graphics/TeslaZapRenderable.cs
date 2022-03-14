@@ -19,7 +19,7 @@ namespace OpenRA.Mods.Cnc.Graphics
 {
 	class TeslaZapRenderable : IPalettedRenderable, IFinalizedRenderable
 	{
-		static int[][] steps = new[]
+		static readonly int[][] Steps = new[]
 		{
 			new int[] { 8, 8, 4, 4, 0 },
 			new int[] { -8, -8, -4, -4, 0 },
@@ -40,8 +40,8 @@ namespace OpenRA.Mods.Cnc.Graphics
 		readonly string brightSequence;
 		readonly int brightZaps, dimZaps;
 
-		WPos cachedPos;
-		WVec cachedLength;
+		readonly WPos cachedPos;
+		readonly WVec cachedLength;
 		IEnumerable<IFinalizedRenderable> cache;
 
 		public TeslaZapRenderable(WPos pos, int zOffset, in WVec length, string image, string brightSequence, int brightZaps, string dimSequence, int dimZaps, string palette)
@@ -58,7 +58,7 @@ namespace OpenRA.Mods.Cnc.Graphics
 
 			cachedPos = WPos.Zero;
 			cachedLength = WVec.Zero;
-			cache = new IFinalizedRenderable[] { };
+			cache = Array.Empty<IFinalizedRenderable>();
 		}
 
 		public WPos Pos => pos;
@@ -144,7 +144,7 @@ namespace OpenRA.Mods.Cnc.Graphics
 
 			while ((to - z).X > 5 || (to - z).X < -5 || (to - z).Y > 5 || (to - z).Y < -5)
 			{
-				var step = steps.Where(t => (to - (z + new float2(t[0], t[1]))).LengthSquared < (to - z).LengthSquared)
+				var step = Steps.Where(t => (to - (z + new float2(t[0], t[1]))).LengthSquared < (to - z).LengthSquared)
 					.MinBy(t => Math.Abs(float2.Dot(z + new float2(t[0], t[1]), q) + c));
 
 				var pos = wr.ProjectedPosition((z + new float2(step[2], step[3])).ToInt2());

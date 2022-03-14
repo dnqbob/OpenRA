@@ -39,13 +39,10 @@ namespace OpenRA
 	}
 
 	[SuppressMessage("StyleCop.CSharp.NamingRules",
-		"SA1307:AccessibleFieldsMustBeginWithUpperCaseLetter",
-		Justification = "Fields names must match the with the remote API.")]
-	[SuppressMessage("StyleCop.CSharp.NamingRules",
-		"SA1304:NonPrivateReadonlyFieldsMustBeginWithUpperCaseLetter",
-		Justification = "Fields names must match the with the remote API.")]
-	[SuppressMessage("StyleCop.CSharp.NamingRules",
 		"SA1310:FieldNamesMustNotContainUnderscore",
+		Justification = "Fields names must match the with the remote API.")]
+	[SuppressMessage("Style",
+		"IDE1006:Naming Styles",
 		Justification = "Fields names must match the with the remote API.")]
 	public class RemoteMapData
 	{
@@ -370,11 +367,11 @@ namespace OpenRA
 					newData.SpawnPoints = spawns.ToArray();
 				}
 				else
-					newData.SpawnPoints = new CPos[0];
+					newData.SpawnPoints = Array.Empty<CPos>();
 			}
 			catch (Exception)
 			{
-				newData.SpawnPoints = new CPos[0];
+				newData.SpawnPoints = Array.Empty<CPos>();
 				newData.Status = MapStatus.Unavailable;
 			}
 

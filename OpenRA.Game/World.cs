@@ -51,7 +51,7 @@ namespace OpenRA
 		public LongBitSet<PlayerBitMask> AllPlayersMask = default(LongBitSet<PlayerBitMask>);
 		public readonly LongBitSet<PlayerBitMask> NoPlayersMask = default(LongBitSet<PlayerBitMask>);
 
-		public Player[] Players = new Player[0];
+		public Player[] Players = Array.Empty<Player>();
 
 		public event Action<Player> RenderPlayerChanged;
 
@@ -158,6 +158,7 @@ namespace OpenRA
 		}
 
 		public readonly ISelection Selection;
+		public readonly IControlGroups ControlGroups;
 
 		public void CancelInputMode() { OrderGenerator = new UnitOrderGenerator(); }
 
@@ -201,6 +202,7 @@ namespace OpenRA
 			ActorMap = WorldActor.Trait<IActorMap>();
 			ScreenMap = WorldActor.Trait<ScreenMap>();
 			Selection = WorldActor.Trait<ISelection>();
+			ControlGroups = WorldActor.Trait<IControlGroups>();
 			OrderValidators = WorldActor.TraitsImplementing<IValidateOrder>().ToArray();
 			notifyDisconnected = WorldActor.TraitsImplementing<INotifyPlayerDisconnected>().ToArray();
 
@@ -370,7 +372,7 @@ namespace OpenRA
 
 		public int WorldTick { get; private set; }
 
-		Dictionary<int, MiniYaml> gameSaveTraitData = new Dictionary<int, MiniYaml>();
+		readonly Dictionary<int, MiniYaml> gameSaveTraitData = new Dictionary<int, MiniYaml>();
 		internal void AddGameSaveTraitData(int traitIndex, MiniYaml yaml)
 		{
 			gameSaveTraitData[traitIndex] = yaml;
@@ -425,7 +427,7 @@ namespace OpenRA
 					foreach (var a in actors.Values)
 						a.Tick();
 
-				ApplyToActorsWithTraitTimed<ITick>((Actor actor, ITick trait) => trait.Tick(actor), "Trait");
+				ApplyToActorsWithTraitTimed<ITick>((actor, trait) => trait.Tick(actor), "Trait");
 
 				effects.DoTimed(e => e.Tick(this), "Effect");
 			}
@@ -437,7 +439,7 @@ namespace OpenRA
 		// For things that want to update their render state once per tick, ignoring pause state
 		public void TickRender(WorldRenderer wr)
 		{
-			ApplyToActorsWithTraitTimed<ITickRender>((Actor actor, ITickRender trait) => trait.TickRender(wr, actor), "Render");
+			ApplyToActorsWithTraitTimed<ITickRender>((actor, trait) => trait.TickRender(wr, actor), "Render");
 			ScreenMap.TickRender();
 		}
 
@@ -499,6 +501,11 @@ namespace OpenRA
 		public void ApplyToActorsWithTraitTimed<T>(Action<Actor, T> action, string text)
 		{
 			TraitDict.ApplyToActorsWithTraitTimed<T>(action, text);
+		}
+
+		public void ApplyToActorsWithTrait<T>(Action<Actor, T> action)
+		{
+			TraitDict.ApplyToActorsWithTrait<T>(action);
 		}
 
 		public IEnumerable<Actor> ActorsHavingTrait<T>()

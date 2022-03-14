@@ -25,7 +25,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic.Ingame
 
 		[ObjectCreator.UseCtor]
 		public RemoveFromControlGroupHotkeyLogic(Widget widget, ModData modData, World world, Dictionary<string, MiniYaml> logicArgs)
-			: base(widget, modData, "RemoveFromControlGroupKey", "WORLD_KEYHANDLER", logicArgs)
+			: base(widget, modData, "RemoveFromControlGroupKey", "PLAYER_KEYHANDLER", logicArgs)
 		{
 			selection = world.Selection;
 			this.world = world;
@@ -38,7 +38,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic.Ingame
 				.ToArray();
 
 			foreach (var a in selectedActors)
-				selection.RemoveFromControlGroup(a);
+				world.ControlGroups.RemoveFromControlGroup(a);
 
 			return true;
 		}
