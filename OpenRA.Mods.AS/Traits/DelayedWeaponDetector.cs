@@ -29,14 +29,15 @@ namespace OpenRA.Mods.AS.Traits
 
 	public class DelayedWeaponDetector : ConditionalTrait<DelayedWeaponDetectorInfo>, ITick, INotifyAddedToWorld, INotifyRemovedFromWorld
 	{
-		private WPos cachedPosition;
-		private WDist cachedRange;
-		private WDist desiredRange;
-		private WDist cachedVRange = new WDist(1536);
+		readonly Actor self;
+		readonly WDist cachedVRange = new WDist(1536);
 
-		private int proximityTrigger;
+		WPos cachedPosition;
+		WDist cachedRange;
+		WDist desiredRange;
+
+		int proximityTrigger;
 		bool cachedDisabled = true;
-		private Actor self;
 
 		public DelayedWeaponDetector(Actor self, DelayedWeaponDetectorInfo info)
 			: base(info)
@@ -74,7 +75,7 @@ namespace OpenRA.Mods.AS.Traits
 			self.World.ActorMap.RemoveProximityTrigger(proximityTrigger);
 		}
 
-		private void ActorEntered(Actor a)
+		void ActorEntered(Actor a)
 		{
 			if (a == self || a.Disposed || self.Disposed)
 				return;
@@ -86,7 +87,7 @@ namespace OpenRA.Mods.AS.Traits
 			}
 		}
 
-		private void ActorExited(Actor a)
+		void ActorExited(Actor a)
 		{
 			if (a.IsDead)
 				return;

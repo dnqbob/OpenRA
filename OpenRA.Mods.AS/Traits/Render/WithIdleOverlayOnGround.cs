@@ -69,8 +69,11 @@ namespace OpenRA.Mods.AS.Traits.Render
 			var body = self.Trait<BodyOrientation>();
 
 			var image = info.Image ?? rs.GetImage(self);
-			overlay = new Animation(self.World, image, () => IsTraitPaused);
-			overlay.IsDecoration = info.IsDecoration;
+			overlay = new Animation(self.World, image, () => IsTraitPaused)
+			{
+				IsDecoration = info.IsDecoration
+			};
+
 			if (info.StartSequence != null)
 				overlay.PlayThen(RenderSprites.NormalizeSequence(overlay, self.GetDamageState(), info.StartSequence),
 					() => overlay.PlayRepeating(RenderSprites.NormalizeSequence(overlay, self.GetDamageState(), info.Sequence)));

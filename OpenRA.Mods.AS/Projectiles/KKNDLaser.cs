@@ -53,9 +53,9 @@ namespace OpenRA.Mods.AS.Projectiles
 
 	public class KKNDLaser : IProjectile, ISync
 	{
-		private readonly KKNDLaserInfo info;
-		private readonly Color[] colors;
-		private readonly WPos[] offsets;
+		readonly KKNDLaserInfo info;
+		readonly Color[] colors;
+		readonly WPos[] offsets;
 
 		readonly WVec leftVector;
 		readonly WVec upVector;
