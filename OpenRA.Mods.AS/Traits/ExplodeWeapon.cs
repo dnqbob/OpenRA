@@ -100,7 +100,7 @@ namespace OpenRA.Mods.AS.Traits
 					return;
 
 				var localoffset = body != null
-					? body.LocalToWorld(info.LocalOffset.Rotate(body.QuantizeOrientation(self, self.Orientation)))
+					? body.LocalToWorld(info.LocalOffset.Rotate(body.QuantizeOrientation(self.Orientation)))
 					: info.LocalOffset;
 
 				var args = new WarheadArgs

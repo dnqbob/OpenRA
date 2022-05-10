@@ -90,7 +90,7 @@ namespace OpenRA.Mods.AS.Traits
 					: Info.Delay[0];
 
 			var localoffset = body != null
-					? body.LocalToWorld(Info.LocalOffset.Rotate(body.QuantizeOrientation(self, self.Orientation)))
+					? body.LocalToWorld(Info.LocalOffset.Rotate(body.QuantizeOrientation(self.Orientation)))
 					: Info.LocalOffset;
 
 			var position = self.CenterPosition + localoffset;
@@ -100,7 +100,7 @@ namespace OpenRA.Mods.AS.Traits
 				var targetVector = offset;
 
 				if (Info.Rotate && body != null)
-					targetVector = targetVector.Rotate(body.QuantizeOrientation(self, self.Orientation));
+					targetVector = targetVector.Rotate(body.QuantizeOrientation(self.Orientation));
 
 				var fragmentTargetPosition = position + targetVector;
 

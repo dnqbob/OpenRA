@@ -39,7 +39,7 @@ namespace OpenRA.Mods.AS.Traits
 
 	public class AttackOpenTopped : AttackFollow, INotifyGarrisonerEntered, INotifyGarrisonerExited, IRender, INotifyPassengerEntered, INotifyPassengerExited
 	{
-		public readonly new AttackOpenToppedInfo Info;
+		public new readonly AttackOpenToppedInfo Info;
 		readonly Lazy<BodyOrientation> coords;
 		readonly List<Actor> actors;
 		readonly List<Armament> armaments;
@@ -106,7 +106,7 @@ namespace OpenRA.Mods.AS.Traits
 			OnActorExited(passenger);
 		}
 
-		WVec SelectFirePort(Actor self, Actor firer)
+		WVec SelectFirePort(Actor firer)
 		{
 			var passengerIndex = actors.IndexOf(firer);
 			if (passengerIndex == -1)
@@ -119,7 +119,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		WVec PortOffset(Actor self, WVec offset)
 		{
-			var bodyOrientation = coords.Value.QuantizeOrientation(self, self.Orientation);
+			var bodyOrientation = coords.Value.QuantizeOrientation(self.Orientation);
 			return coords.Value.LocalToWorld(offset.Rotate(bodyOrientation));
 		}
 
@@ -137,7 +137,7 @@ namespace OpenRA.Mods.AS.Traits
 				if (a.IsTraitDisabled)
 					continue;
 
-				var port = SelectFirePort(self, a.Actor);
+				var port = SelectFirePort(a.Actor);
 
 				var muzzleFacing = targetYaw;
 				paxFacing[a.Actor].Facing = muzzleFacing;
@@ -173,7 +173,7 @@ namespace OpenRA.Mods.AS.Traits
 		{
 			// Display muzzle flashes
 			foreach (var m in muzzles)
-				foreach (var r in m.MuzzleFlash.Render(self, wr, wr.Palette(m.Palette)))
+				foreach (var r in m.MuzzleFlash.Render(self, wr.Palette(m.Palette)))
 					yield return r;
 		}
 

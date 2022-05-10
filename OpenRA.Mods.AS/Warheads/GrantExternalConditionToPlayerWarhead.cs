@@ -49,7 +49,7 @@ namespace OpenRA.Mods.AS.Warheads
 			foreach (var p in players)
 			{
 				var external = p.TraitsImplementing<ExternalCondition>()
-					.FirstOrDefault(t => t.Info.Condition == Condition && t.CanGrantCondition(p, firedBy));
+					.FirstOrDefault(t => t.Info.Condition == Condition && t.CanGrantCondition(firedBy));
 
 				if (external != null)
 					external.GrantCondition(p, firedBy, Duration);

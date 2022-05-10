@@ -13,7 +13,6 @@ using System.Collections.Generic;
 using System.Linq;
 using OpenRA.Mods.Common;
 using OpenRA.Mods.Common.Activities;
-using OpenRA.Mods.Common.Pathfinder;
 using OpenRA.Mods.Common.Traits;
 using OpenRA.Traits;
 
@@ -49,15 +48,14 @@ namespace OpenRA.Mods.AS.Traits
 			public readonly Actor Actor;
 			public readonly Harvester Harvester;
 			public readonly Parachutable Parachutable;
-			public readonly Locomotor Locomotor;
+			public readonly Mobile Mobile;
 
 			public HarvesterTraitWrapper(Actor actor)
 			{
 				Actor = actor;
 				Harvester = actor.Trait<Harvester>();
 				Parachutable = actor.TraitOrDefault<Parachutable>();
-				var mobile = actor.Trait<Mobile>();
-				Locomotor = mobile.Locomotor;
+				Mobile = actor.Trait<Mobile>();
 			}
 		}
 
@@ -66,7 +64,6 @@ namespace OpenRA.Mods.AS.Traits
 		readonly Func<Actor, bool> unitCannotBeOrdered;
 		readonly Dictionary<Actor, HarvesterTraitWrapper> harvesters = new Dictionary<Actor, HarvesterTraitWrapper>();
 
-		IPathFinder pathfinder;
 		DomainIndex domainIndex;
 		IResourceLayer resLayer;
 		ResourceClaimLayer claimLayer;
@@ -92,7 +89,6 @@ namespace OpenRA.Mods.AS.Traits
 
 		protected override void TraitEnabled(Actor self)
 		{
-			pathfinder = world.WorldActor.Trait<IPathFinder>();
 			domainIndex = world.WorldActor.Trait<DomainIndex>();
 			resLayer = world.WorldActor.TraitOrDefault<ResourceLayer>();
 			claimLayer = world.WorldActor.TraitOrDefault<ResourceClaimLayer>();
@@ -153,18 +149,15 @@ namespace OpenRA.Mods.AS.Traits
 		Target FindNextResource(Actor actor, HarvesterTraitWrapper harv)
 		{
 			Func<CPos, bool> isValidResource = cell =>
-				domainIndex.IsPassable(actor.Location, cell, harv.Locomotor) &&
-				harv.Harvester.CanHarvestCell(actor, cell) &&
+				domainIndex.IsPassable(actor.Location, cell, harv.Mobile.Locomotor) &&
+				harv.Harvester.CanHarvestCell(cell) &&
 				claimLayer.CanClaimCell(actor, cell);
 
-			List<CPos> path;
-			using (var search =
-				PathSearch.ToTargetCellByPredicate(
-					world, harv.Locomotor, actor, new[] { actor.Location }, isValidResource, BlockedByActor.Stationary,
-					loc => world.FindActorsInCircle(world.Map.CenterOfCell(loc), Info.HarvesterEnemyAvoidanceRadius)
-						.Where(u => !u.IsDead && actor.Owner.RelationshipWith(u.Owner) == PlayerRelationship.Enemy)
-						.Sum(u => Math.Max(WDist.Zero.Length, Info.HarvesterEnemyAvoidanceRadius.Length - (world.Map.CenterOfCell(loc) - u.CenterPosition).Length))))
-				path = pathfinder.FindPath(search);
+			var path = harv.Mobile.PathFinder.FindUnitPathToTargetCellByPredicate(
+				actor, new[] { actor.Location }, isValidResource, BlockedByActor.Stationary,
+				loc => world.FindActorsInCircle(world.Map.CenterOfCell(loc), Info.HarvesterEnemyAvoidanceRadius)
+					.Where(u => !u.IsDead && actor.Owner.RelationshipWith(u.Owner) == PlayerRelationship.Enemy)
+					.Sum(u => Math.Max(WDist.Zero.Length, Info.HarvesterEnemyAvoidanceRadius.Length - (world.Map.CenterOfCell(loc) - u.CenterPosition).Length)));
 
 			if (path.Count == 0)
 				return Target.Invalid;

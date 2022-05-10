@@ -78,7 +78,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (LeapInfo.LeapTargetCondition != null)
 			{
 				var external = target.Actor.TraitsImplementing<ExternalCondition>()
-				.FirstOrDefault(t => t.Info.Condition == LeapInfo.LeapTargetCondition && t.CanGrantCondition(delayedTarget.Actor, self));
+				.FirstOrDefault(t => t.Info.Condition == LeapInfo.LeapTargetCondition && t.CanGrantCondition(self));
 
 				if (external != null)
 					targetCondition = (target.Actor, external.GrantCondition(target.Actor, self));

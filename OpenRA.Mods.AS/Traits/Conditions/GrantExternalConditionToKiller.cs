@@ -54,7 +54,7 @@ namespace OpenRA.Mods.AS.Traits
 				return;
 
 			var external = e.Attacker.TraitsImplementing<ExternalCondition>()
-				.FirstOrDefault(t => t.Info.Condition == Info.Condition && t.CanGrantCondition(e.Attacker, self));
+				.FirstOrDefault(t => t.Info.Condition == Info.Condition && t.CanGrantCondition(self));
 
 			if (external != null)
 				external.GrantCondition(e.Attacker, self, Info.Duration);
