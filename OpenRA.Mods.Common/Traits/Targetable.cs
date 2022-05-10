@@ -23,9 +23,9 @@ namespace OpenRA.Mods.Common.Traits
 		public readonly BitSet<TargetableType> TargetTypes;
 		public BitSet<TargetableType> GetTargetTypes() { return TargetTypes; }
 
-		public bool RequiresForceFire = false;
+		public readonly bool RequiresForceFire = false;
 
-		public override object Create(ActorInitializer init) { return new Targetable(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new Targetable(this); }
 	}
 
 	public class Targetable : ConditionalTrait<TargetableInfo>, ITargetable
@@ -33,7 +33,7 @@ namespace OpenRA.Mods.Common.Traits
 		protected static readonly string[] None = Array.Empty<string>();
 		protected Cloak[] cloaks;
 
-		public Targetable(Actor self, TargetableInfo info)
+		public Targetable(TargetableInfo info)
 			: base(info) { }
 
 		protected override void Created(Actor self)

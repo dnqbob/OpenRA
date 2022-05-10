@@ -235,7 +235,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public Locomotor Locomotor { get; private set; }
 
-		public IPathFinder Pathfinder { get; private set; }
+		public IPathFinder PathFinder { get; private set; }
 
 		#region IOccupySpace
 
@@ -304,7 +304,7 @@ namespace OpenRA.Mods.Common.Traits
 			notifyMoving = self.TraitsImplementing<INotifyMoving>().ToArray();
 			notifyFinishedMoving = self.TraitsImplementing<INotifyFinishedMoving>().ToArray();
 			moveWrappers = self.TraitsImplementing<IWrapMove>().ToArray();
-			Pathfinder = self.World.WorldActor.Trait<IPathFinder>();
+			PathFinder = self.World.WorldActor.Trait<IPathFinder>();
 			Locomotor = self.World.WorldActor.TraitsImplementing<Locomotor>()
 				.Single(l => l.Info.Name == Info.Locomotor);
 
@@ -315,10 +315,10 @@ namespace OpenRA.Mods.Common.Traits
 
 		void ITick.Tick(Actor self)
 		{
-			UpdateMovement(self);
+			UpdateMovement();
 		}
 
-		public void UpdateMovement(Actor self)
+		public void UpdateMovement()
 		{
 			var newMovementTypes = MovementType.None;
 			if ((oldPos - CenterPosition).HorizontalLengthSquared != 0)
@@ -498,7 +498,7 @@ namespace OpenRA.Mods.Common.Traits
 			self.World.UpdateMaps(self, this);
 
 			var map = self.World.Map;
-			SetTerrainRampOrientation(self, map.TerrainOrientation(map.CellContaining(pos)));
+			SetTerrainRampOrientation(map.TerrainOrientation(map.CellContaining(pos)));
 
 			// The first time SetCenterPosition is called is in the constructor before creation, so we need a null check here as well
 			if (notifyCenterPositionChanged == null)
@@ -508,7 +508,7 @@ namespace OpenRA.Mods.Common.Traits
 				n.CenterPositionChanged(self, fromCell.Layer, toCell.Layer);
 		}
 
-		public void SetTerrainRampOrientation(Actor self, WRot orientation)
+		public void SetTerrainRampOrientation(WRot orientation)
 		{
 			if (Info.TerrainOrientationAdjustmentMargin.Length >= 0)
 				terrainRampOrientation = orientation;
@@ -727,7 +727,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public int EstimatedMoveDuration(Actor self, WPos fromPos, WPos toPos)
 		{
-			var speed = MovementSpeedForCell(self, self.Location);
+			var speed = MovementSpeedForCell(self.Location);
 			return speed > 0 ? (toPos - fromPos).Length / speed : 0;
 		}
 
@@ -749,7 +749,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		#region Local IMove-related
 
-		public int MovementSpeedForCell(Actor self, CPos cell)
+		public int MovementSpeedForCell(CPos cell)
 		{
 			var terrainSpeed = Locomotor.MovementSpeedForCell(cell);
 			var modifiers = speedModifiers.Value.Append(terrainSpeed);
@@ -816,7 +816,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		Activity LocalMove(Actor self, WPos fromPos, WPos toPos, CPos cell)
 		{
-			var speed = MovementSpeedForCell(self, cell);
+			var speed = MovementSpeedForCell(cell);
 			var length = speed > 0 ? (toPos - fromPos).Length / speed : 0;
 
 			var delta = toPos - fromPos;
@@ -832,10 +832,8 @@ namespace OpenRA.Mods.Common.Traits
 			if (CanEnterCell(above))
 				return above;
 
-			List<CPos> path;
-			using (var search = PathSearch.ToTargetCellByPredicate(
-				self.World, Locomotor, self, new[] { self.Location }, loc => loc.Layer == 0 && CanEnterCell(loc), BlockedByActor.All))
-				path = Pathfinder.FindPath(search);
+			var path = PathFinder.FindUnitPathToTargetCellByPredicate(
+				self, new[] { self.Location }, loc => loc.Layer == 0 && CanEnterCell(loc), BlockedByActor.All);
 
 			if (path.Count > 0)
 				return path[0];
@@ -857,7 +855,7 @@ namespace OpenRA.Mods.Common.Traits
 
 			// Allows the husk to drag to its final position
 			if (CanEnterCell(self.Location, self, BlockedByActor.Stationary))
-				init.Add(new HuskSpeedInit(MovementSpeedForCell(self, self.Location)));
+				init.Add(new HuskSpeedInit(MovementSpeedForCell(self.Location)));
 		}
 
 		void INotifyBecomingIdle.OnBecomingIdle(Actor self)
@@ -1013,7 +1011,7 @@ namespace OpenRA.Mods.Common.Traits
 			public int OrderPriority => 4;
 			public bool IsQueued { get; protected set; }
 
-			public bool CanTarget(Actor self, in Target target, List<Actor> othersAtTarget, ref TargetModifiers modifiers, ref string cursor)
+			public bool CanTarget(Actor self, in Target target, ref TargetModifiers modifiers, ref string cursor)
 			{
 				if (rejectMove || target.Type != TargetType.Terrain || (mobile.requireForceMove && !modifiers.HasModifier(TargetModifiers.ForceMove)))
 					return false;

@@ -252,7 +252,7 @@ namespace OpenRA.Scripting
 				worldLoaded.Call().Dispose();
 		}
 
-		public void Tick(Actor self)
+		public void Tick()
 		{
 			if (FatalErrorOccurred || disposed)
 				return;
@@ -287,7 +287,7 @@ namespace OpenRA.Scripting
 
 		Type[] FilterCommands(ActorInfo ai, Type[] knownCommands)
 		{
-			var method = typeof(ActorInfo).GetMethod("HasTraitInfo");
+			var method = typeof(ActorInfo).GetMethod(nameof(ActorInfo.HasTraitInfo));
 			return knownCommands.Where(c => ExtractRequiredTypes(c)
 				.All(t => (bool)method.MakeGenericMethod(t).Invoke(ai, NoArguments)))
 				.ToArray();

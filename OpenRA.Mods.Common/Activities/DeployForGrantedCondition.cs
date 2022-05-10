@@ -48,7 +48,7 @@ namespace OpenRA.Mods.Common.Activities
 			if (IsCanceling || (deploy.DeployState != DeployState.Deployed && moving))
 				return true;
 
-			QueueChild(new DeployInner(self, deploy));
+			QueueChild(new DeployInner(deploy));
 
 			if (deploy.Info.LandOnDeploy && self.TraitOrDefault<Aircraft>() != null && deploy.DeployState != DeployState.Undeploying)
 				QueueChild(new TakeOff(self));
@@ -62,7 +62,7 @@ namespace OpenRA.Mods.Common.Activities
 		readonly GrantConditionOnDeploy deployment;
 		bool initiated;
 
-		public DeployInner(Actor self, GrantConditionOnDeploy deployment)
+		public DeployInner(GrantConditionOnDeploy deployment)
 		{
 			this.deployment = deployment;
 

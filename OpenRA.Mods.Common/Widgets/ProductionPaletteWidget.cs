@@ -124,7 +124,7 @@ namespace OpenRA.Mods.Common.Widgets
 		IProductionIconOverlay[] pios;
 
 		[CustomLintableHotkeyNames]
-		public static IEnumerable<string> LinterHotkeyNames(MiniYamlNode widgetNode, Action<string> emitError, Action<string> emitWarning)
+		public static IEnumerable<string> LinterHotkeyNames(MiniYamlNode widgetNode, Action<string> emitError)
 		{
 			var prefix = "";
 			var prefixNode = widgetNode.Value.Nodes.FirstOrDefault(n => n.Key == "HotkeyPrefix");
@@ -305,6 +305,8 @@ namespace OpenRA.Mods.Common.Widgets
 				// Resume a paused item
 				Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Sounds", ClickSound, null);
 				Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Speech", CurrentQueue.Info.QueuedAudio, World.LocalPlayer.Faction.InternalName);
+				TextNotificationsManager.AddTransientLine(CurrentQueue.Info.QueuedTextNotification, World.LocalPlayer);
+
 				World.IssueOrder(Order.PauseProduction(CurrentQueue.Actor, icon.Name, false));
 				return true;
 			}
@@ -315,10 +317,13 @@ namespace OpenRA.Mods.Common.Widgets
 			{
 				// Queue a new item
 				Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Sounds", ClickSound, null);
-				var canQueue = CurrentQueue.CanQueue(buildable, out var notification);
+				var canQueue = CurrentQueue.CanQueue(buildable, out var notification, out var textNotification);
 
 				if (!CurrentQueue.AllQueued().Any())
+				{
 					Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Speech", notification, World.LocalPlayer.Faction.InternalName);
+					TextNotificationsManager.AddTransientLine(textNotification, World.LocalPlayer);
+				}
 
 				if (canQueue)
 				{
@@ -342,12 +347,16 @@ namespace OpenRA.Mods.Common.Widgets
 			{
 				// Instantly cancel items that haven't started, have finished, or if the queue doesn't support pausing
 				Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Speech", CurrentQueue.Info.CancelledAudio, World.LocalPlayer.Faction.InternalName);
+				TextNotificationsManager.AddTransientLine(CurrentQueue.Info.CancelledTextNotification, World.LocalPlayer);
+
 				World.IssueOrder(Order.CancelProduction(CurrentQueue.Actor, icon.Name, handleCount));
 			}
 			else
 			{
 				// Pause an existing item
 				Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Speech", CurrentQueue.Info.OnHoldAudio, World.LocalPlayer.Faction.InternalName);
+				TextNotificationsManager.AddTransientLine(CurrentQueue.Info.OnHoldTextNotification, World.LocalPlayer);
+
 				World.IssueOrder(Order.PauseProduction(CurrentQueue.Actor, icon.Name, true));
 			}
 
@@ -362,6 +371,8 @@ namespace OpenRA.Mods.Common.Widgets
 			// Directly cancel, skipping "on-hold"
 			Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Sounds", ClickSound, null);
 			Game.Sound.PlayNotification(World.Map.Rules, World.LocalPlayer, "Speech", CurrentQueue.Info.CancelledAudio, World.LocalPlayer.Faction.InternalName);
+			TextNotificationsManager.AddTransientLine(CurrentQueue.Info.CancelledTextNotification, World.LocalPlayer);
+
 			World.IssueOrder(Order.CancelProduction(CurrentQueue.Actor, icon.Name, handleCount));
 
 			return true;
@@ -457,7 +468,7 @@ namespace OpenRA.Mods.Common.Widgets
 				var rect = new Rectangle(rb.X + x * (IconSize.X + IconMargin.X), rb.Y + y * (IconSize.Y + IconMargin.Y), IconSize.X, IconSize.Y);
 
 				var rsi = item.TraitInfo<RenderSpritesInfo>();
-				var icon = new Animation(World, rsi.GetImage(item, World.Map.Rules.Sequences, faction));
+				var icon = new Animation(World, rsi.GetImage(item, faction));
 				var bi = item.TraitInfo<BuildableInfo>();
 				icon.Play(bi.Icon);
 

@@ -131,7 +131,7 @@ namespace OpenRA
 					filterNode: n => n.Key.StartsWith(ActorInfo.AbstractActorPrefix, StringComparison.Ordinal));
 
 				var weapons = MergeOrDefault("Manifest,Weapons", fs, m.Weapons, null, null,
-					k => new WeaponInfo(k.Key.ToLowerInvariant(), k.Value));
+					k => new WeaponInfo(k.Value));
 
 				var voices = MergeOrDefault("Manifest,Voices", fs, m.Voices, null, null,
 					k => new SoundInfo(k.Value));
@@ -190,7 +190,7 @@ namespace OpenRA
 					filterNode: n => n.Key.StartsWith(ActorInfo.AbstractActorPrefix, StringComparison.Ordinal));
 
 				var weapons = MergeOrDefault("Weapons", fileSystem, m.Weapons, mapWeapons, dr.Weapons,
-					k => new WeaponInfo(k.Key.ToLowerInvariant(), k.Value));
+					k => new WeaponInfo(k.Value));
 
 				var voices = MergeOrDefault("Voices", fileSystem, m.Voices, mapVoices, dr.Voices,
 					k => new SoundInfo(k.Value));
@@ -248,7 +248,7 @@ namespace OpenRA
 					{
 						var traitName = traitNode.Key.Split('@')[0];
 						var traitType = modData.ObjectCreator.FindType(traitName + "Info");
-						if (traitType != null && traitType.GetInterface("ILobbyCustomRulesIgnore") == null)
+						if (traitType != null && traitType.GetInterface(nameof(ILobbyCustomRulesIgnore)) == null)
 							return true;
 					}
 					catch (Exception ex)

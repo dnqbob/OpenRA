@@ -67,7 +67,7 @@ namespace OpenRA.Mods.Common.Widgets
 		float2 iconOffset, holdOffset, readyOffset, timeOffset;
 
 		[CustomLintableHotkeyNames]
-		public static IEnumerable<string> LinterHotkeyNames(MiniYamlNode widgetNode, Action<string> emitError, Action<string> emitWarning)
+		public static IEnumerable<string> LinterHotkeyNames(MiniYamlNode widgetNode, Action<string> emitError)
 		{
 			var prefix = "";
 			var prefixNode = widgetNode.Value.Nodes.FirstOrDefault(n => n.Key == "HotkeyPrefix");
@@ -173,6 +173,8 @@ namespace OpenRA.Mods.Common.Widgets
 				Game.Sound.PlayToPlayer(SoundType.UI, spm.Self.Owner, clicked.Power.Info.InsufficientPowerSound);
 				Game.Sound.PlayNotification(spm.Self.World.Map.Rules, spm.Self.Owner, "Speech",
 					clicked.Power.Info.InsufficientPowerSpeechNotification, spm.Self.Owner.Faction.InternalName);
+
+				TextNotificationsManager.AddTransientLine(clicked.Power.Info.InsufficientPowerTextNotification, spm.Self.Owner);
 			}
 			else
 				clicked.Power.Target();

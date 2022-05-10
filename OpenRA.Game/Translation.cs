@@ -19,6 +19,19 @@ using OpenRA.FileSystem;
 
 namespace OpenRA
 {
+	[AttributeUsage(AttributeTargets.Field)]
+	public sealed class TranslationReferenceAttribute : Attribute
+	{
+		public readonly string[] RequiredVariableNames;
+
+		public TranslationReferenceAttribute() { }
+
+		public TranslationReferenceAttribute(params string[] requiredVariableNames)
+		{
+			RequiredVariableNames = requiredVariableNames;
+		}
+	}
+
 	public class Translation
 	{
 		readonly IEnumerable<MessageContext> messageContexts;
@@ -31,7 +44,7 @@ namespace OpenRA
 			messageContexts = GetMessageContext(language, translations, fileSystem).ToList();
 		}
 
-		IEnumerable<MessageContext> GetMessageContext(string language, string[] translations, IReadOnlyFileSystem fileSystem)
+		static IEnumerable<MessageContext> GetMessageContext(string language, string[] translations, IReadOnlyFileSystem fileSystem)
 		{
 			var backfall = translations.Where(t => t.EndsWith("en.ftl"));
 			var paths = translations.Where(t => t.EndsWith(language + ".ftl"));
@@ -69,6 +82,15 @@ namespace OpenRA
 			}
 
 			return key;
+		}
+
+		public bool HasAttribute(string key)
+		{
+			foreach (var messageContext in messageContexts)
+				if (messageContext.HasMessage(key))
+					return true;
+
+			return false;
 		}
 
 		public string GetAttribute(string key, string attribute)
@@ -110,7 +132,7 @@ namespace OpenRA
 
 				value = args[i + 1];
 				if (value == null)
-					throw new ArgumentNullException("args", $"Expected the argument at index {i + 1} to be a non-null value");
+					throw new ArgumentNullException(nameof(args), $"Expected the argument at index {i + 1} to be a non-null value");
 
 				argumentDictionary.Add(name, value);
 			}

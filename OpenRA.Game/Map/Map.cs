@@ -21,7 +21,6 @@ using OpenRA.Graphics;
 using OpenRA.Primitives;
 using OpenRA.Support;
 using OpenRA.Traits;
-using OpenRA.Widgets;
 
 namespace OpenRA
 {
@@ -1324,7 +1323,7 @@ namespace OpenRA
 		public Stream Open(string filename)
 		{
 			// Explicit package paths never refer to a map
-			if (!filename.Contains("|") && Package.Contains(filename))
+			if (!filename.Contains('|') && Package.Contains(filename))
 				return Package.GetStream(filename);
 
 			return modData.DefaultFileSystem.Open(filename);
@@ -1339,7 +1338,7 @@ namespace OpenRA
 		public bool TryOpen(string filename, out Stream s)
 		{
 			// Explicit package paths never refer to a map
-			if (!filename.Contains("|"))
+			if (!filename.Contains('|'))
 			{
 				s = Package.GetStream(filename);
 				if (s != null)
@@ -1352,7 +1351,7 @@ namespace OpenRA
 		public bool Exists(string filename)
 		{
 			// Explicit package paths never refer to a map
-			if (!filename.Contains("|") && Package.Contains(filename))
+			if (!filename.Contains('|') && Package.Contains(filename))
 				return true;
 
 			return modData.DefaultFileSystem.Exists(filename);
@@ -1361,7 +1360,7 @@ namespace OpenRA
 		public bool IsExternalModFile(string filename)
 		{
 			// Explicit package paths never refer to a map
-			if (filename.Contains("|"))
+			if (filename.Contains('|'))
 				return modData.DefaultFileSystem.IsExternalModFile(filename);
 
 			return false;
@@ -1370,7 +1369,7 @@ namespace OpenRA
 		public string Translate(string key, IDictionary<string, object> args = null, string attribute = null)
 		{
 			if (Translation.GetFormattedMessage(key, args, attribute) == key)
-				return Ui.Translate(key, args, attribute);
+				return modData.Translation.GetFormattedMessage(key, args, attribute);
 
 			return Translation.GetFormattedMessage(key, args, attribute);
 		}
