@@ -148,13 +148,13 @@ namespace OpenRA.Mods.AS.Traits
 
 		Target FindNextResource(Actor actor, HarvesterTraitWrapper harv)
 		{
-			Func<CPos, bool> isValidResource = cell =>
+			bool IsValidResource(CPos cell) =>
 				domainIndex.IsPassable(actor.Location, cell, harv.Mobile.Locomotor) &&
 				harv.Harvester.CanHarvestCell(cell) &&
 				claimLayer.CanClaimCell(actor, cell);
 
 			var path = harv.Mobile.PathFinder.FindUnitPathToTargetCellByPredicate(
-				actor, new[] { actor.Location }, isValidResource, BlockedByActor.Stationary,
+				actor, new[] { actor.Location }, IsValidResource, BlockedByActor.Stationary,
 				loc => world.FindActorsInCircle(world.Map.CenterOfCell(loc), Info.HarvesterEnemyAvoidanceRadius)
 					.Where(u => !u.IsDead && actor.Owner.RelationshipWith(u.Owner) == PlayerRelationship.Enemy)
 					.Sum(u => Math.Max(WDist.Zero.Length, Info.HarvesterEnemyAvoidanceRadius.Length - (world.Map.CenterOfCell(loc) - u.CenterPosition).Length)));

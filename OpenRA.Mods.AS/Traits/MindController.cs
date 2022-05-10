@@ -37,7 +37,7 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("The sound played when the unit is mindcontrolled.")]
 		public readonly string[] Sounds = Array.Empty<string>();
 
-		public override object Create(ActorInitializer init) { return new MindController(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new MindController(this); }
 	}
 
 	public class MindController : PausableConditionalTrait<MindControllerInfo>, INotifyAttack, INotifyKilled, INotifyActorDisposing, INotifyCreated
@@ -47,7 +47,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		public IEnumerable<Actor> Slaves { get { return slaves; } }
 
-		public MindController(Actor self, MindControllerInfo info)
+		public MindController(MindControllerInfo info)
 			: base(info) { }
 
 		void StackControllingCondition(Actor self, string condition)
@@ -100,7 +100,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (mindControllable.IsTraitDisabled || mindControllable.IsTraitPaused)
 				return;
 
-			if (Info.Capacity > 0 && !Info.DiscardOldest && slaves.Count() >= Info.Capacity)
+			if (Info.Capacity > 0 && !Info.DiscardOldest && slaves.Count >= Info.Capacity)
 				return;
 
 			slaves.Add(target.Actor);
@@ -110,7 +110,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (Info.Sounds.Any())
 				Game.Sound.Play(SoundType.World, Info.Sounds.Random(self.World.SharedRandom), self.CenterPosition);
 
-			if (Info.Capacity > 0 && Info.DiscardOldest && slaves.Count() > Info.Capacity)
+			if (Info.Capacity > 0 && Info.DiscardOldest && slaves.Count > Info.Capacity)
 				slaves[0].Trait<MindControllable>().RevokeMindControl(slaves[0]);
 		}
 
@@ -129,7 +129,7 @@ namespace OpenRA.Mods.AS.Traits
 				UnstackControllingCondition(self, Info.ControllingCondition);
 		}
 
-		public void TransformSlave(Actor self, Actor oldSlave, Actor newSlave)
+		public void TransformSlave(Actor oldSlave, Actor newSlave)
 		{
 			if (slaves.Contains(oldSlave))
 				slaves[slaves.FindIndex(o => o == oldSlave)] = newSlave;

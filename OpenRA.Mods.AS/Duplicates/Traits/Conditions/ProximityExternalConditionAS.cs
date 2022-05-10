@@ -151,8 +151,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (a.Disposed)
 				return;
 
-			int token;
-			if (!tokens.TryGetValue(a, out token))
+			if (!tokens.TryGetValue(a, out var token))
 				return;
 
 			tokens.Remove(a);

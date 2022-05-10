@@ -44,7 +44,7 @@ namespace OpenRA.Mods.AS.Traits
 		public readonly bool ShowSelectionBar = false;
 		public readonly Color ChargeColor = Color.DarkOrange;
 
-		public override object Create(ActorInitializer init) { return new PeriodicProducer(init, this); }
+		public override object Create(ActorInitializer init) { return new PeriodicProducer(this); }
 	}
 
 	public class PeriodicProducer : PausableConditionalTrait<PeriodicProducerInfo>, ISelectionBar, ITick, ISync
@@ -54,7 +54,7 @@ namespace OpenRA.Mods.AS.Traits
 		[Sync]
 		int ticks;
 
-		public PeriodicProducer(ActorInitializer init, PeriodicProducerInfo info)
+		public PeriodicProducer(PeriodicProducerInfo info)
 			: base(info)
 		{
 			this.info = info;

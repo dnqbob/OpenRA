@@ -23,7 +23,7 @@ namespace OpenRA.Mods.AS.Traits
 			"This allows the spawned unit to enter the spawner while the spawner is moving.")]
 		public readonly WDist CloseEnoughDistance = new WDist(128);
 
-		public override object Create(ActorInitializer init) { return new AirstrikeSlave(init, this); }
+		public override object Create(ActorInitializer init) { return new AirstrikeSlave(this); }
 	}
 
 	public class AirstrikeSlave : BaseSpawnerSlave, INotifyIdle
@@ -35,8 +35,8 @@ namespace OpenRA.Mods.AS.Traits
 
 		AirstrikeMaster spawnerMaster;
 
-		public AirstrikeSlave(ActorInitializer init, AirstrikeSlaveInfo info)
-			: base(init, info)
+		public AirstrikeSlave(AirstrikeSlaveInfo info)
+			: base(info)
 		{
 			Info = info;
 		}

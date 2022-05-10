@@ -18,12 +18,12 @@ namespace OpenRA.Mods.AS.Traits
 	[Desc("When enabled, the actor will randomly try to attack nearby other actors.")]
 	public class BerserkableInfo : ConditionalTraitInfo
 	{
-		public override object Create(ActorInitializer init) { return new Berserkable(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new Berserkable(this); }
 	}
 
 	class Berserkable : ConditionalTrait<BerserkableInfo>, INotifyIdle
 	{
-		public Berserkable(Actor self, BerserkableInfo info)
+		public Berserkable(BerserkableInfo info)
 			: base(info) { }
 
 		void Blink(Actor self)

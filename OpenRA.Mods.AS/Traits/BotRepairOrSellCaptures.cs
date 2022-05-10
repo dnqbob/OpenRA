@@ -16,14 +16,14 @@ namespace OpenRA.Mods.AS.Traits
 	[Desc("Helper trait to set the AI to try selling and then repairing newly controlled buildings.")]
 	public class BotRepairOrSellCapturesInfo : TraitInfo
 	{
-		public override object Create(ActorInitializer init) { return new BotRepairOrSellCaptures(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new BotRepairOrSellCaptures(this); }
 	}
 
 	public class BotRepairOrSellCaptures : INotifyOwnerChanged
 	{
 		public readonly BotRepairOrSellCapturesInfo Info;
 
-		public BotRepairOrSellCaptures(Actor self, BotRepairOrSellCapturesInfo info)
+		public BotRepairOrSellCaptures(BotRepairOrSellCapturesInfo info)
 		{
 			Info = info;
 		}

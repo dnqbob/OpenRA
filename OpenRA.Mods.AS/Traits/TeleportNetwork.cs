@@ -38,7 +38,7 @@ namespace OpenRA.Mods.AS.Traits
 			Info = info;
 		}
 
-		void IncreaseTeleportNetworkCount(Actor self, Player owner)
+		void IncreaseTeleportNetworkCount(Actor self)
 		{
 			// Assign itself as primary, when first one.
 			if (tnm.Count == 0)
@@ -54,7 +54,7 @@ namespace OpenRA.Mods.AS.Traits
 			tnm.Count++;
 		}
 
-		void DecreaseTeleportNetworkCount(Actor self, Player owner)
+		void DecreaseTeleportNetworkCount(Actor self)
 		{
 			tnm.Count--;
 
@@ -76,18 +76,19 @@ namespace OpenRA.Mods.AS.Traits
 		void INotifyAddedToWorld.AddedToWorld(Actor self)
 		{
 			tnm = self.Owner.PlayerActor.TraitsImplementing<TeleportNetworkManager>().First(x => x.Type == Info.Type);
-			IncreaseTeleportNetworkCount(self, self.Owner);
+			IncreaseTeleportNetworkCount(self);
 		}
 
 		public void OnOwnerChanged(Actor self, Player oldOwner, Player newOwner)
 		{
-			DecreaseTeleportNetworkCount(self, oldOwner);
-			IncreaseTeleportNetworkCount(self, newOwner);
+			DecreaseTeleportNetworkCount(self);
+			tnm = newOwner.PlayerActor.TraitsImplementing<TeleportNetworkManager>().First(x => x.Type == Info.Type);
+			IncreaseTeleportNetworkCount(self);
 		}
 
 		void INotifyRemovedFromWorld.RemovedFromWorld(Actor self)
 		{
-			DecreaseTeleportNetworkCount(self, self.Owner);
+			DecreaseTeleportNetworkCount(self);
 		}
 	}
 }

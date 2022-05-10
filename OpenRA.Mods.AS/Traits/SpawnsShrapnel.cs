@@ -54,10 +54,8 @@ namespace OpenRA.Mods.AS.Traits
 		{
 			base.RulesetLoaded(rules, ai);
 
-			WeaponInfo weaponInfo;
-
 			var weaponToLower = Weapon.ToLowerInvariant();
-			if (!rules.Weapons.TryGetValue(weaponToLower, out weaponInfo))
+			if (!rules.Weapons.TryGetValue(weaponToLower, out var weaponInfo))
 				throw new YamlException("Weapons Ruleset does not contain an entry '{0}'".F(weaponToLower));
 
 			WeaponInfo = weaponInfo;
@@ -121,7 +119,7 @@ namespace OpenRA.Mods.AS.Traits
 
 			for (var i = 0; i < amount; i++)
 			{
-				Target shrapnelTarget = Target.Invalid;
+				var shrapnelTarget = Target.Invalid;
 
 				if (world.SharedRandom.Next(100) < Info.AimChance && targetActor.MoveNext())
 					shrapnelTarget = Target.FromActor(targetActor.Current);

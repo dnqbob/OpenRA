@@ -40,7 +40,7 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("The width of the zap.")]
 		public readonly WDist Width = new WDist(43);
 
-		public override object Create(ActorInitializer init) { return new WithMindControlArc(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new WithMindControlArc(this); }
 	}
 
 	public class WithMindControlArc : IRenderAboveShroudWhenSelected, INotifySelected, INotifyCreated
@@ -49,7 +49,7 @@ namespace OpenRA.Mods.AS.Traits
 		MindController mindController;
 		MindControllable mindControllable;
 
-		public WithMindControlArc(Actor self, WithMindControlArcInfo info)
+		public WithMindControlArc(WithMindControlArcInfo info)
 		{
 			this.info = info;
 		}

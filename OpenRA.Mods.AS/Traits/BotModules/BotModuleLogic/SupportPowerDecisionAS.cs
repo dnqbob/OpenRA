@@ -24,7 +24,7 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("What support power does this decision apply to?")]
 		public readonly string OrderName = "AirstrikePowerInfoOrder";
 
-		[FieldLoader.LoadUsing("LoadConsiderations")]
+		[FieldLoader.LoadUsing(nameof(LoadConsiderations))]
 		[Desc("The decisions associated with this power")]
 		public readonly List<Consideration> Considerations = new List<Consideration>();
 
@@ -83,7 +83,7 @@ namespace OpenRA.Mods.AS.Traits
 
 				// IsValid check filters out Frozen Actors that have not initizialized their Owner
 				foreach (var scrutinized in checkFrozen)
-					answer += consideration.GetAttractiveness(scrutinized, firedBy.RelationshipWith(scrutinized.Owner), firedBy);
+					answer += consideration.GetAttractiveness(scrutinized, firedBy.RelationshipWith(scrutinized.Owner));
 			}
 
 			return answer;
@@ -96,7 +96,7 @@ namespace OpenRA.Mods.AS.Traits
 			foreach (var consideration in Considerations)
 				foreach (var scrutinized in frozenActors)
 					if (scrutinized.IsValid && scrutinized.Visible)
-						answer += consideration.GetAttractiveness(scrutinized, firedBy.RelationshipWith(scrutinized.Owner), firedBy);
+						answer += consideration.GetAttractiveness(scrutinized, firedBy.RelationshipWith(scrutinized.Owner));
 
 			return answer;
 		}
@@ -165,7 +165,7 @@ namespace OpenRA.Mods.AS.Traits
 				return 0;
 			}
 
-			public int GetAttractiveness(FrozenActor fa, PlayerRelationship stance, Player firedBy)
+			public int GetAttractiveness(FrozenActor fa, PlayerRelationship stance)
 			{
 				if (stance != Against)
 					return 0;

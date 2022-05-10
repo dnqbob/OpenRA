@@ -34,7 +34,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		public readonly GrantRandomConditionOnDeliveryTrigger Triggers = GrantRandomConditionOnDeliveryTrigger.IncomingDelivery;
 
-		public override object Create(ActorInitializer init) { return new GrantRandomConditionOnDelivery(init.Self, this); }
+		public override object Create(ActorInitializer init) { return new GrantRandomConditionOnDelivery(this); }
 	}
 
 	public class GrantRandomConditionOnDelivery : INotifyCreated, INotifyOwnerChanged, INotifyDelivery
@@ -43,7 +43,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		int conditionToken = Actor.InvalidConditionToken;
 
-		public GrantRandomConditionOnDelivery(Actor self, GrantRandomConditionOnDeliveryInfo info)
+		public GrantRandomConditionOnDelivery(GrantRandomConditionOnDeliveryInfo info)
 		{
 			this.info = info;
 		}

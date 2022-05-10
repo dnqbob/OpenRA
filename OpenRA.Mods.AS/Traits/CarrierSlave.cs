@@ -8,9 +8,7 @@
  */
 #endregion
 
-using System.Linq;
 using OpenRA.Mods.AS.Activities;
-using OpenRA.Mods.Common.Traits;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.AS.Traits
@@ -21,21 +19,19 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("Move this close to the spawner, before entering it.")]
 		public readonly WDist LandingDistance = new WDist(5 * 1024);
 
-		public override object Create(ActorInitializer init) { return new CarrierSlave(init, this); }
+		public override object Create(ActorInitializer init) { return new CarrierSlave(this); }
 	}
 
 	public class CarrierSlave : BaseSpawnerSlave, INotifyIdle
 	{
-		readonly AmmoPool[] ammoPools;
 		public readonly CarrierSlaveInfo Info;
 
 		CarrierMaster spawnerMaster;
 
-		public CarrierSlave(ActorInitializer init, CarrierSlaveInfo info)
-			: base(init, info)
+		public CarrierSlave(CarrierSlaveInfo info)
+			: base(info)
 		{
 			Info = info;
-			ammoPools = init.Self.TraitsImplementing<AmmoPool>().ToArray();
 		}
 
 		public void EnterSpawner(Actor self)
