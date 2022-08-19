@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -341,7 +341,7 @@ namespace OpenRA.Mods.D2k.UtilityCommands
 			tileSetsFromYaml = terrainInfo.Templates.Where(t =>
 			{
 				var templateInfo = (DefaultTerrainTemplateInfo)t.Value;
-				return templateInfo.Frames != null && templateInfo.Images[0].ToLowerInvariant() == tilesetName.ToLowerInvariant();
+				return templateInfo.Frames != null && string.Equals(templateInfo.Images[0], tilesetName, StringComparison.InvariantCultureIgnoreCase);
 			}).Select(ts => ts.Value).ToList();
 
 			var players = new MapPlayers(map.Rules, playerCount);
@@ -371,34 +371,36 @@ namespace OpenRA.Mods.D2k.UtilityCommands
 				{
 					var kvp = ActorDataByActorCode[tileSpecialInfo];
 					if (!rules.Actors.ContainsKey(kvp.Actor.ToLowerInvariant()))
-						throw new InvalidOperationException($"Actor with name {kvp.Actor} could not be found in the rules YAML file!");
-
-					var a = new ActorReference(kvp.Actor)
+						Console.WriteLine($"Ignoring unknown actor type: `{kvp.Actor.ToLowerInvariant()}`");
+					else
 					{
-						new LocationInit(locationOnMap),
-						new OwnerInit(kvp.Owner)
-					};
-
-					map.ActorDefinitions.Add(new MiniYamlNode("Actor" + map.ActorDefinitions.Count, a.Save()));
-
-					if (map.PlayerDefinitions.All(x => x.Value.Nodes.Single(y => y.Key == "Name").Value.Value != kvp.Owner))
-					{
-						var playerInfo = PlayerReferenceDataByPlayerName[kvp.Owner];
-						var playerReference = new PlayerReference
+						var a = new ActorReference(kvp.Actor)
 						{
-							Name = kvp.Owner,
-							OwnsWorld = kvp.Owner == "Neutral",
-							NonCombatant = kvp.Owner == "Neutral",
-							Faction = playerInfo.Faction,
-							Color = playerInfo.Color
+							new LocationInit(locationOnMap),
+							new OwnerInit(kvp.Owner)
 						};
 
-						var node = new MiniYamlNode($"{nameof(PlayerReference)}@{kvp.Owner}", FieldSaver.SaveDifferences(playerReference, new PlayerReference()));
-						map.PlayerDefinitions.Add(node);
-					}
+						map.ActorDefinitions.Add(new MiniYamlNode("Actor" + map.ActorDefinitions.Count, a.Save()));
 
-					if (kvp.Actor == "mpspawn")
-						playerCount++;
+						if (map.PlayerDefinitions.All(x => x.Value.Nodes.Single(y => y.Key == "Name").Value.Value != kvp.Owner))
+						{
+							var playerInfo = PlayerReferenceDataByPlayerName[kvp.Owner];
+							var playerReference = new PlayerReference
+							{
+								Name = kvp.Owner,
+								OwnsWorld = kvp.Owner == "Neutral",
+								NonCombatant = kvp.Owner == "Neutral",
+								Faction = playerInfo.Faction,
+								Color = playerInfo.Color
+							};
+
+							var node = new MiniYamlNode($"{nameof(PlayerReference)}@{kvp.Owner}", FieldSaver.SaveDifferences(playerReference, new PlayerReference()));
+							map.PlayerDefinitions.Add(node);
+						}
+
+						if (kvp.Actor == "mpspawn")
+							playerCount++;
+					}
 				}
 			}
 		}
@@ -416,7 +418,7 @@ namespace OpenRA.Mods.D2k.UtilityCommands
 		TerrainTile GetTile(int tileIndex)
 		{
 			// Some tiles are duplicates of other tiles, just on a different tileset
-			if (tilesetName.ToLowerInvariant() == "bloxbgbs.r8")
+			if (string.Equals(tilesetName, "bloxbgbs.r8", StringComparison.InvariantCultureIgnoreCase))
 			{
 				if (tileIndex == 355)
 					return new TerrainTile(441, 0);
@@ -425,7 +427,7 @@ namespace OpenRA.Mods.D2k.UtilityCommands
 					return new TerrainTile(442, 0);
 			}
 
-			if (tilesetName.ToLowerInvariant() == "bloxtree.r8")
+			if (string.Equals(tilesetName, "bloxtree.r8", StringComparison.InvariantCultureIgnoreCase))
 			{
 				var indices = new[] { 683, 684, 685, 706, 703, 704, 705, 726, 723, 724, 725, 746, 743, 744, 745, 747 };
 				for (var i = 0; i < 16; i++)
@@ -446,7 +448,7 @@ namespace OpenRA.Mods.D2k.UtilityCommands
 					return new TerrainTile(215, 0);
 			}
 
-			if (tilesetName.ToLowerInvariant() == "bloxwast.r8")
+			if (string.Equals(tilesetName, "bloxwast.r8", StringComparison.InvariantCultureIgnoreCase))
 			{
 				if (tileIndex == 342)
 					return new TerrainTile(250, 0);

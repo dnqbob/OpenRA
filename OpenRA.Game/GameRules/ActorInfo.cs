@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -114,7 +114,7 @@ namespace OpenRA
 				OptionalDependencies = OptionalPrerequisitesOf(i).ToList()
 			}).ToList();
 
-			var resolved = source.Where(s => !s.Dependencies.Any() && !s.OptionalDependencies.Any()).ToList();
+			var resolved = source.Where(s => s.Dependencies.Count == 0 && s.OptionalDependencies.Count == 0).ToList();
 			var unresolved = source.Except(resolved);
 
 			var testResolve = new Func<Type, Type, bool>((a, b) => a == b || a.IsAssignableFrom(b));

@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -50,7 +50,7 @@ namespace OpenRA.Mods.Common.Traits
 			this.category = category;
 			failRetryTicks = baseBuilder.Info.StructureProductionResumeDelay;
 			minimumExcessPower = baseBuilder.Info.MinimumExcessPower;
-			if (!baseBuilder.Info.NavalProductionTypes.Any())
+			if (baseBuilder.Info.NavalProductionTypes.Count == 0)
 				waterState = WaterCheck.DontCheck;
 		}
 
@@ -98,7 +98,7 @@ namespace OpenRA.Mods.Common.Traits
 				return;
 
 			playerBuildings = world.ActorsHavingTrait<Building>().Where(a => a.Owner == player).ToArray();
-			var excessPowerBonus = baseBuilder.Info.ExcessPowerIncrement * (playerBuildings.Count() / baseBuilder.Info.ExcessPowerIncreaseThreshold.Clamp(1, int.MaxValue));
+			var excessPowerBonus = baseBuilder.Info.ExcessPowerIncrement * (playerBuildings.Length / baseBuilder.Info.ExcessPowerIncreaseThreshold.Clamp(1, int.MaxValue));
 			minimumExcessPower = (baseBuilder.Info.MinimumExcessPower + excessPowerBonus).Clamp(baseBuilder.Info.MinimumExcessPower, baseBuilder.Info.MaximumExcessPower);
 
 			var active = false;
@@ -156,7 +156,7 @@ namespace OpenRA.Mods.Common.Traits
 				else
 				{
 					// Check if Building is a defense and if we should place it towards the enemy or not.
-					if (actorInfo.HasTraitInfo<AttackBaseInfo>() && world.LocalRandom.Next(100) < baseBuilder.Info.PlaceDefenseTowardsEnemyChance)
+					if (baseBuilder.Info.DefenseTypes.Contains(actorInfo.Name) && world.LocalRandom.Next(100) < baseBuilder.Info.PlaceDefenseTowardsEnemyChance)
 						type = BuildingType.Defense;
 					else if (baseBuilder.Info.RefineryTypes.Contains(actorInfo.Name))
 						type = BuildingType.Refinery;

@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -45,7 +45,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				{
 					"Slot", new List<SlotDropDownOption>
 					{
-						new SlotDropDownOption("Open", "slot_open " + slot.PlayerReference, () => (!slot.Closed && client == null)),
+						new SlotDropDownOption("Open", "slot_open " + slot.PlayerReference, () => !slot.Closed && client == null),
 						new SlotDropDownOption("Closed", "slot_close " + slot.PlayerReference, () => slot.Closed)
 					}
 				}
@@ -63,7 +63,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				}
 			}
 
-			options.Add(bots.Any() ? "Bots" : "Bots Disabled", bots);
+			options.Add(bots.Count > 0 ? "Bots" : "Bots Disabled", bots);
 
 			Func<SlotDropDownOption, ScrollItemWidget, ScrollItemWidget> setupItem = (o, itemTemplate) =>
 			{

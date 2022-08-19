@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -35,7 +35,7 @@ namespace OpenRA
 
 			foreach (var kv in settings)
 			{
-				if (definitions.ContainsKey(kv.Key))
+				if (definitions.ContainsKey(kv.Key) && !definitions[kv.Key].Readonly)
 					keys[kv.Key] = kv.Value;
 			}
 
@@ -59,6 +59,9 @@ namespace OpenRA
 		public void Set(string name, Hotkey value)
 		{
 			if (!definitions.TryGetValue(name, out var definition))
+				return;
+
+			if (definition.Readonly)
 				return;
 
 			keys[name] = value;

@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -53,7 +53,7 @@ namespace OpenRA
 
 		public static bool HasAttribute<T>(this MemberInfo mi)
 		{
-			return mi.GetCustomAttributes(typeof(T), true).Length != 0;
+			return Attribute.IsDefined(mi, typeof(T));
 		}
 
 		public static T[] GetCustomAttributes<T>(this MemberInfo mi, bool inherit)
@@ -424,8 +424,10 @@ namespace OpenRA
 					if (!dupKeys.TryGetValue(key, out var dupKeyMessages))
 					{
 						// Log the initial conflicting value already inserted:
-						dupKeyMessages = new List<string>();
-						dupKeyMessages.Add(logValue(d[key]));
+						dupKeyMessages = new List<string>
+						{
+							logValue(d[key])
+						};
 						dupKeys.Add(key, dupKeyMessages);
 					}
 

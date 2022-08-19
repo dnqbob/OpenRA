@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -11,7 +11,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using OpenRA.GameRules;
 using OpenRA.Graphics;
 using OpenRA.Mods.Common.Effects;
@@ -126,7 +125,7 @@ namespace OpenRA.Mods.Common.Traits
 		public override object Create(ActorInitializer init) { return new NukePower(init.Self, this); }
 		public override void RulesetLoaded(Ruleset rules, ActorInfo ai)
 		{
-			if (!string.IsNullOrEmpty(TrailImage) && !TrailSequences.Any())
+			if (!string.IsNullOrEmpty(TrailImage) && TrailSequences.Length == 0)
 				throw new YamlException("At least one entry in TrailSequences must be defined when TrailImage is defined.");
 
 			var weaponToLower = (MissileWeapon ?? string.Empty).ToLowerInvariant();

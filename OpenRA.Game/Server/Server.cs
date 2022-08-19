@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -68,6 +68,8 @@ namespace OpenRA.Server
 		readonly List<TcpListener> listeners = new List<TcpListener>();
 		readonly TypeDictionary serverTraits = new TypeDictionary();
 		readonly PlayerDatabase playerDatabase;
+
+		OrderBuffer orderBuffer;
 
 		volatile ServerState internalState = ServerState.WaitingPlayers;
 
@@ -360,6 +362,18 @@ namespace OpenRA.Server
 
 						foreach (var t in serverTraits.WithInterface<ITick>())
 							t.Tick(this);
+
+						if (State == ServerState.GameStarted)
+						{
+							foreach (var (playerIndex, scale) in orderBuffer.GetTickScales())
+							{
+								var frame = CreateTickScaleFrame(scale);
+								var con = Conns.SingleOrDefault(c => c.PlayerIndex == playerIndex);
+
+								if (con != null && con.Validated)
+									DispatchFrameToClient(con, playerIndex, frame);
+							}
+						}
 					}
 
 					if (State == ServerState.ShuttingDown)
@@ -634,9 +648,9 @@ namespace OpenRA.Server
 
 						events.Add(new CallbackEvent(() =>
 						{
-							var notAuthenticated = Type == ServerType.Dedicated && profile == null && (Settings.RequireAuthentication || Settings.ProfileIDWhitelist.Any());
+							var notAuthenticated = Type == ServerType.Dedicated && profile == null && (Settings.RequireAuthentication || Settings.ProfileIDWhitelist.Length > 0);
 							var blacklisted = Type == ServerType.Dedicated && profile != null && Settings.ProfileIDBlacklist.Contains(profile.ProfileID);
-							var notWhitelisted = Type == ServerType.Dedicated && Settings.ProfileIDWhitelist.Any() &&
+							var notWhitelisted = Type == ServerType.Dedicated && Settings.ProfileIDWhitelist.Length > 0 &&
 								(profile == null || !Settings.ProfileIDWhitelist.Contains(profile.ProfileID));
 
 							if (notAuthenticated)
@@ -662,7 +676,7 @@ namespace OpenRA.Server
 				}
 				else
 				{
-					if (Type == ServerType.Dedicated && (Settings.RequireAuthentication || Settings.ProfileIDWhitelist.Any()))
+					if (Type == ServerType.Dedicated && (Settings.RequireAuthentication || Settings.ProfileIDWhitelist.Length > 0))
 					{
 						Log.Write("server", $"Rejected connection from {newConn.EndPoint}; Not authenticated.");
 						SendOrderTo(newConn, "ServerError", RequiresForumAccount);
@@ -889,6 +903,8 @@ namespace OpenRA.Server
 					frame += OrderLatency;
 					DispatchFrameToClient(conn, conn.PlayerIndex, CreateAckFrame(frame, 1));
 
+					orderBuffer.AddOrderTimestamp(conn.PlayerIndex);
+
 					// Track the last frame for each client so the disconnect handling can write
 					// an EndOfOrders marker with the correct frame number.
 					// TODO: This should be handled by the order buffering system too
@@ -934,16 +950,16 @@ namespace OpenRA.Server
 
 		public void SendLocalizedMessage(string key, Dictionary<string, object> arguments = null)
 		{
-			var text = new LocalizedMessage(key, arguments).Serialize();
+			var text = LocalizedMessage.Serialize(key, arguments);
 			DispatchServerOrdersToClients(Order.FromTargetString("LocalizedMessage", text, true));
 
 			if (Type == ServerType.Dedicated)
-				WriteLineWithTimeStamp(ModData.Translation.GetFormattedMessage(key, arguments));
+				WriteLineWithTimeStamp(ModData.Translation.GetString(key, arguments));
 		}
 
 		public void SendLocalizedMessageTo(Connection conn, string key, Dictionary<string, object> arguments = null)
 		{
-			var text = new LocalizedMessage(key, arguments).Serialize();
+			var text = LocalizedMessage.Serialize(key, arguments);
 			DispatchOrdersToClient(conn, 0, 0, Order.FromTargetString("LocalizedMessage", text, true).Serialize());
 		}
 
@@ -1154,6 +1170,7 @@ namespace OpenRA.Server
 		{
 			lock (LobbyInfo)
 			{
+				orderBuffer?.RemovePlayer(toDrop.PlayerIndex);
 				Conns.Remove(toDrop);
 
 				var dropClient = LobbyInfo.Clients.FirstOrDefault(c => c.Index == toDrop.PlayerIndex);
@@ -1286,7 +1303,7 @@ namespace OpenRA.Server
 		{
 			lock (LobbyInfo)
 			{
-				WriteLineWithTimeStamp(ModData.Translation.GetFormattedMessage(GameStarted));
+				WriteLineWithTimeStamp(ModData.Translation.GetString(GameStarted));
 
 				// Drop any players who are not ready
 				foreach (var c in Conns.Where(c => !c.Validated || GetClient(c).IsInvalid).ToArray())
@@ -1329,12 +1346,16 @@ namespace OpenRA.Server
 				SyncLobbyInfo();
 				State = ServerState.GameStarted;
 
+				var gameSpeeds = Game.ModData.Manifest.Get<GameSpeeds>();
+				var gameSpeedName = LobbyInfo.GlobalSettings.OptionOrDefault("gamespeed", gameSpeeds.DefaultSpeed);
+
+				var gameSpeed = gameSpeeds.Speeds[gameSpeedName];
+
+				orderBuffer = new OrderBuffer();
+				orderBuffer.Start(gameSpeed, Conns.Where(c => c.Validated).Select(c => c.PlayerIndex));
+
 				if (Type != ServerType.Local)
-				{
-					var gameSpeeds = Game.ModData.Manifest.Get<GameSpeeds>();
-					var gameSpeedName = LobbyInfo.GlobalSettings.OptionOrDefault("gamespeed", gameSpeeds.DefaultSpeed);
-					OrderLatency = gameSpeeds.Speeds[gameSpeedName].OrderLatency;
-				}
+					OrderLatency = gameSpeed.OrderLatency;
 
 				if (GameSave == null && LobbyInfo.GlobalSettings.GameSavesEnabled)
 					GameSave = new GameSave();

@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -330,10 +330,10 @@ namespace OpenRA.Mods.Common.Traits
 					if (projectile != null)
 						self.World.Add(projectile);
 
-					if (args.Weapon.Report != null && args.Weapon.Report.Any())
+					if (args.Weapon.Report != null && args.Weapon.Report.Length > 0)
 						Game.Sound.Play(SoundType.World, args.Weapon.Report, self.World, self.CenterPosition);
 
-					if (burst == args.Weapon.Burst && args.Weapon.StartBurstReport != null && args.Weapon.StartBurstReport.Any())
+					if (burst == args.Weapon.Burst && args.Weapon.StartBurstReport != null && args.Weapon.StartBurstReport.Length > 0)
 						Game.Sound.Play(SoundType.World, args.Weapon.StartBurstReport, self.World, self.CenterPosition);
 
 					foreach (var na in notifyAttacks)
@@ -359,7 +359,7 @@ namespace OpenRA.Mods.Common.Traits
 				FireDelay = Util.ApplyPercentageModifiers(Weapon.ReloadDelay, modifiers);
 				Burst = Weapon.Burst;
 
-				if (Weapon.AfterFireSound != null && Weapon.AfterFireSound.Any())
+				if (Weapon.AfterFireSound != null && Weapon.AfterFireSound.Length > 0)
 					ScheduleDelayedAction(Weapon.AfterFireSoundDelay, Burst, (burst) => Game.Sound.Play(SoundType.World, Weapon.AfterFireSound, self.World, self.CenterPosition));
 
 				foreach (var nbc in notifyBurstComplete)

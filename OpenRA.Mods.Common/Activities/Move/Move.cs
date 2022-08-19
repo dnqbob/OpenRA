@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -58,7 +58,7 @@ namespace OpenRA.Mods.Common.Activities
 
 			getPath = check =>
 			{
-				return mobile.PathFinder.FindUnitPathToTargetCell(
+				return mobile.PathFinder.FindPathToTargetCell(
 					self, new[] { mobile.ToCell }, destination, check, laneBias: false);
 			};
 
@@ -78,7 +78,7 @@ namespace OpenRA.Mods.Common.Activities
 				if (!this.destination.HasValue)
 					return PathFinder.NoPath;
 
-				return mobile.PathFinder.FindUnitPathToTargetCell(
+				return mobile.PathFinder.FindPathToTargetCell(
 					self, new[] { mobile.ToCell }, this.destination.Value, check, ignoreActor: ignoreActor);
 			};
 
@@ -204,7 +204,7 @@ namespace OpenRA.Mods.Common.Activities
 				return null;
 			}
 
-			var containsTemporaryBlocker = WorldUtils.ContainsTemporaryBlocker(self.World, nextCell, self);
+			var containsTemporaryBlocker = self.World.ContainsTemporaryBlocker(nextCell, self);
 
 			// Next cell in the move is blocked by another actor
 			if (containsTemporaryBlocker || !mobile.CanEnterCell(nextCell, ignoreActor))
@@ -309,8 +309,7 @@ namespace OpenRA.Mods.Common.Activities
 		{
 			foreach (var actor in self.World.ActorMap.GetActorsAt(cell))
 			{
-				var move = actor.OccupiesSpace as Mobile;
-				if (move == null || !move.IsTraitEnabled() || !move.IsLeaving())
+				if (!(actor.OccupiesSpace is Mobile move) || !move.IsTraitEnabled() || !move.IsLeaving())
 					return false;
 			}
 

@@ -1,6 +1,6 @@
 #region Copyright & License Information
 /*
- * Copyright 2007-2021 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2022 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -133,12 +133,12 @@ namespace OpenRA
 						}
 
 						var sources = files.Select(s => MiniYaml.FromStream(fileSystem.Open(s), s).Where(IsLoadableRuleDefinition).ToList());
-						if (RuleDefinitions.Nodes.Any())
+						if (RuleDefinitions.Nodes.Count > 0)
 							sources = sources.Append(RuleDefinitions.Nodes.Where(IsLoadableRuleDefinition).ToList());
 
 						var yamlNodes = MiniYaml.Merge(sources);
-						WorldActorInfo = new ActorInfo(modData.ObjectCreator, "world", yamlNodes.First(n => n.Key.ToLowerInvariant() == "world").Value);
-						PlayerActorInfo = new ActorInfo(modData.ObjectCreator, "player", yamlNodes.First(n => n.Key.ToLowerInvariant() == "player").Value);
+						WorldActorInfo = new ActorInfo(modData.ObjectCreator, "world", yamlNodes.First(n => string.Equals(n.Key, "world", StringComparison.InvariantCultureIgnoreCase)).Value);
+						PlayerActorInfo = new ActorInfo(modData.ObjectCreator, "player", yamlNodes.First(n => string.Equals(n.Key, "player", StringComparison.InvariantCultureIgnoreCase)).Value);
 						return;
 					}
 				}

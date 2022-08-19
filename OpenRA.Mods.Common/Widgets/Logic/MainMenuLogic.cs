@@ -94,7 +94,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			var missionsButton = singleplayerMenu.Get<ButtonWidget>("MISSIONS_BUTTON");
 			missionsButton.OnClick = OpenMissionBrowserPanel;
 
-			var hasCampaign = modData.Manifest.Missions.Any();
+			var hasCampaign = modData.Manifest.Missions.Length > 0;
 			var hasMissions = modData.MapCache
 				.Any(p => p.Status == MapStatus.Available && p.Visibility.HasFlag(MapVisibility.MissionSelector));
 
@@ -346,7 +346,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			});
 		}
 
-		void LoadMapIntoEditor(string uid)
+		static void LoadMapIntoEditor(string uid)
 		{
 			Game.LoadEditor(uid);
 

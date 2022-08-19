@@ -97,7 +97,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			missionList.RemoveChildren();
 
 			// Add a group for each campaign
-			if (modData.Manifest.Missions.Any())
+			if (modData.Manifest.Missions.Length > 0)
 			{
 				var yaml = MiniYaml.Merge(modData.Manifest.Missions.Select(
 					m => MiniYaml.FromStream(modData.DefaultFileSystem.Open(m), m)));
@@ -135,7 +135,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				allPreviews.AddRange(loosePreviews);
 			}
 
-			if (allPreviews.Any())
+			if (allPreviews.Count > 0)
 				SelectMap(allPreviews.First());
 
 			// Preload map preview to reduce jank
@@ -234,7 +234,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					infoVideo = missionData.BackgroundVideo;
 					infoVideoVisible = infoVideo != null;
 
-					var briefing = WidgetUtils.WrapText(missionData.Briefing.Replace("\\n", "\n"), description.Bounds.Width, descriptionFont);
+					var briefing = WidgetUtils.WrapText(missionData.Briefing?.Replace("\\n", "\n"), description.Bounds.Width, descriptionFont);
 					var height = descriptionFont.Measure(briefing).Y;
 					Game.RunAfterTick(() =>
 					{
@@ -343,15 +343,28 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				playingVideo = pv;
 				player.Load(video);
 
-				// video playback runs asynchronously
-				player.PlayThen(() =>
+				if (player.Video == null)
 				{
 					StopVideo(player);
-					onComplete?.Invoke();
-				});
 
-				// Mute other distracting sounds
-				MuteSounds();
+					ConfirmationDialogs.ButtonPrompt(
+						title: "Unable to play video",
+						text: "Something went wrong during video playback.",
+						cancelText: "Back",
+						onCancel: () => { });
+				}
+				else
+				{
+					// video playback runs asynchronously
+					player.PlayThen(() =>
+					{
+						StopVideo(player);
+						onComplete?.Invoke();
+					});
+
+					// Mute other distracting sounds
+					MuteSounds();
+				}
 			}
 		}
 
