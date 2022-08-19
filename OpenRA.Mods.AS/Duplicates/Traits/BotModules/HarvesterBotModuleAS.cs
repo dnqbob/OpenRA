@@ -64,7 +64,6 @@ namespace OpenRA.Mods.AS.Traits
 		readonly Func<Actor, bool> unitCannotBeOrdered;
 		readonly Dictionary<Actor, HarvesterTraitWrapper> harvesters = new Dictionary<Actor, HarvesterTraitWrapper>();
 
-		DomainIndex domainIndex;
 		IResourceLayer resLayer;
 		ResourceClaimLayer claimLayer;
 		IBotRequestUnitProduction[] requestUnitProduction;
@@ -89,7 +88,6 @@ namespace OpenRA.Mods.AS.Traits
 
 		protected override void TraitEnabled(Actor self)
 		{
-			domainIndex = world.WorldActor.Trait<DomainIndex>();
 			resLayer = world.WorldActor.TraitOrDefault<ResourceLayer>();
 			claimLayer = world.WorldActor.TraitOrDefault<ResourceClaimLayer>();
 			scanForIdleHarvestersTicks = Info.ScanForIdleHarvestersInterval;
@@ -148,13 +146,12 @@ namespace OpenRA.Mods.AS.Traits
 
 		Target FindNextResource(Actor actor, HarvesterTraitWrapper harv)
 		{
-			bool IsValidResource(CPos cell) =>
-				domainIndex.IsPassable(actor.Location, cell, harv.Mobile.Locomotor) &&
+			Func<CPos, bool> isValidResource = cell =>
 				harv.Harvester.CanHarvestCell(cell) &&
 				claimLayer.CanClaimCell(actor, cell);
 
-			var path = harv.Mobile.PathFinder.FindUnitPathToTargetCellByPredicate(
-				actor, new[] { actor.Location }, IsValidResource, BlockedByActor.Stationary,
+			var path = harv.Mobile.PathFinder.FindPathToTargetCellByPredicate(
+				actor, new[] { actor.Location }, isValidResource, BlockedByActor.Stationary,
 				loc => world.FindActorsInCircle(world.Map.CenterOfCell(loc), Info.HarvesterEnemyAvoidanceRadius)
 					.Where(u => !u.IsDead && actor.Owner.RelationshipWith(u.Owner) == PlayerRelationship.Enemy)
 					.Sum(u => Math.Max(WDist.Zero.Length, Info.HarvesterEnemyAvoidanceRadius.Length - (world.Map.CenterOfCell(loc) - u.CenterPosition).Length)));
