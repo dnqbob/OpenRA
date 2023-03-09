@@ -47,6 +47,9 @@ namespace OpenRA.Mods.AS.Traits
 
 		void INotifyResourceAccepted.OnResourceAccepted(Actor self, Actor refinery, string resourceType, int count, int value)
 		{
+			if (self != refinery)
+				return;
+
 			if (IsTraitDisabled)
 				return;
 
