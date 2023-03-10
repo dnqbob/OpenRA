@@ -417,9 +417,15 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 
 		string PlayerLabel(GameServer game)
 		{
-			return players.Update(game.Players)
-				+ bots.Update(game.Bots)
-				+ spectators.Update(game.Spectators);
+			var label = players.Update(game.Players);
+
+			if (game.Bots > 0)
+				label += " " + bots.Update(game.Bots);
+
+			if (game.Spectators > 0)
+				label += " " + spectators.Update(game.Spectators);
+
+			return label;
 		}
 
 		public void RefreshServerList()
@@ -586,7 +592,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				var group = kv.Key;
 				if (group.Length > 0)
 				{
-					var header = ScrollItemWidget.Setup(clientHeader, () => true, () => { });
+					var header = ScrollItemWidget.Setup(clientHeader, () => false, () => { });
 					header.Get<LabelWidget>("LABEL").GetText = () => group;
 					clientList.AddChild(header);
 				}
@@ -679,7 +685,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 				if (modGames.All(Filtered))
 					continue;
 
-				var header = ScrollItemWidget.Setup(headerTemplate, () => true, () => { });
+				var header = ScrollItemWidget.Setup(headerTemplate, () => false, () => { });
 
 				var headerTitle = modGames.First().ModLabel;
 				header.Get<LabelWidget>("LABEL").GetText = () => headerTitle;
