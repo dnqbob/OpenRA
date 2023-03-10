@@ -99,6 +99,9 @@ namespace OpenRA.GameRules
 		[Desc("Number of shots in a single ammo magazine.")]
 		public readonly int Burst = 1;
 
+		[Desc("Can this weapon target the attacker itself?")]
+		public readonly bool CanTargetSelf = false;
+
 		[Desc("What types of targets are affected.")]
 		public readonly BitSet<TargetableType> ValidTargets = new BitSet<TargetableType>("Ground", "Water");
 
@@ -206,29 +209,24 @@ namespace OpenRA.GameRules
 		/// <summary>Checks if the weapon is valid against (can target) the actor.</summary>
 		public bool IsValidAgainst(Actor victim, Actor firedBy)
 		{
-			var targetTypes = victim.GetEnabledTargetTypes();
-
-			if (!IsValidTarget(targetTypes))
+			if (!CanTargetSelf && victim == firedBy)
 				return false;
 
-			// PERF: Avoid LINQ.
-			foreach (var warhead in Warheads)
-				if (warhead.IsValidAgainst(victim, firedBy))
-					return true;
+			var targetTypes = victim.GetEnabledTargetTypes();
 
-			return false;
+			return IsValidTarget(targetTypes);
 		}
 
 		/// <summary>Checks if the weapon is valid against (can target) the frozen actor.</summary>
 		public bool IsValidAgainst(FrozenActor victim, Actor firedBy)
 		{
-			if (!IsValidTarget(victim.TargetTypes))
+			if (!victim.IsValid)
 				return false;
 
-			if (!Warheads.Any(w => w.IsValidAgainst(victim, firedBy)))
+			if (!CanTargetSelf && victim.Actor == firedBy)
 				return false;
 
-			return true;
+			return IsValidTarget(victim.TargetTypes);
 		}
 
 		/// <summary>Applies all the weapon's warheads to the target.</summary>
