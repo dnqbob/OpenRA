@@ -11,6 +11,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using OpenRA.GameRules;
 using OpenRA.Graphics;
 using OpenRA.Mods.Common.Effects;
@@ -104,7 +105,7 @@ namespace OpenRA.Mods.Common.Projectiles
 		[Desc("Type defined for point-defense logic.")]
 		public readonly string PointDefenseType = null;
 
-		[Desc("When set, display a line behind the actor. Length is measured in ticks after
+		[Desc("When set, display a line behind the actor. Length is measured in ticks after appearing.")]
 		public readonly int ContrailLength = 0;
 
 		[Desc("Time (in ticks) after which the line should appear. Controls the distance to the actor.")]
