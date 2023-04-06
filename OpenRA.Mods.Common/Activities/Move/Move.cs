@@ -21,12 +21,12 @@ namespace OpenRA.Mods.Common.Activities
 {
 	public class Move : Activity
 	{
+		public WAngle ActorFacingModifier;
 		readonly Mobile mobile;
 		readonly WDist nearEnough;
 		readonly Func<BlockedByActor, List<CPos>> getPath;
 		readonly Actor ignoreActor;
 		readonly Color? targetLineColor;
-		WAngle actorFacingModifier;
 
 		static readonly BlockedByActor[] PathSearchOrder =
 		{
@@ -162,13 +162,13 @@ namespace OpenRA.Mods.Common.Activities
 
 			if (mobile.Info.CanMoveBackward && self.World.WorldTick - startTicks < mobile.Info.BackwardDuration && Math.Abs(firstFacing.Angle - mobile.Facing.Angle) > 256)
 			{
-				actorFacingModifier = new WAngle(512);
-				firstFacing += actorFacingModifier;
+				ActorFacingModifier = new WAngle(512);
+				firstFacing += ActorFacingModifier;
 			}
 			else
-				actorFacingModifier = WAngle.Zero;
+				ActorFacingModifier = WAngle.Zero;
 
-			if (firstFacing != mobile.Facing)
+			if (!mobile.Info.TurnsWhileMoving && firstFacing != mobile.Facing)
 			{
 				path.Add(nextCell.Value.Cell);
 				QueueChild(new Turn(self, firstFacing));
@@ -368,6 +368,7 @@ namespace OpenRA.Mods.Common.Activities
 			protected readonly WAngle ArcToAngle;
 			protected readonly int Distance;
 			protected readonly bool MovingOnGroundLayer;
+			protected readonly bool TurnsWhileMoving;
 			readonly int terrainOrientationMargin;
 			protected int progress;
 
@@ -387,6 +388,10 @@ namespace OpenRA.Mods.Common.Activities
 				MovingOnGroundLayer = movingOnGroundLayer;
 
 				IsInterruptible = false; // See comments in Move.Cancel()
+
+				TurnsWhileMoving = move.mobile.Info.TurnsWhileMoving;
+				if (TurnsWhileMoving)
+					ToFacing = TurnsWhileMoving ? (To - From).Yaw + Move.ActorFacingModifier : toFacing;
 
 				// Calculate an elliptical arc that joins from and to
 				var delta = (fromFacing - toFacing).Angle;
@@ -427,7 +432,9 @@ namespace OpenRA.Mods.Common.Activities
 				if (progress >= Distance)
 				{
 					mobile.SetCenterPosition(self, To);
-					mobile.Facing = ToFacing;
+					mobile.Facing = TurnsWhileMoving
+						? Util.TickFacing(mobile.Facing, ToFacing, mobile.TurnSpeed)
+						: ToFacing;
 
 					Move.lastMovePartCompletedTick = self.World.WorldTick;
 					Queue(OnComplete(self, mobile, Move));
@@ -466,7 +473,10 @@ namespace OpenRA.Mods.Common.Activities
 					mobile.SetTerrainRampOrientation(orientation);
 				}
 
-				mobile.Facing = WAngle.Lerp(FromFacing, ToFacing, progress, Distance);
+				mobile.Facing = TurnsWhileMoving
+					? Util.TickFacing(mobile.Facing, ToFacing, mobile.TurnSpeed)
+					: WAngle.Lerp(FromFacing, ToFacing, progress, Distance);
+
 				return false;
 			}
 
@@ -487,11 +497,11 @@ namespace OpenRA.Mods.Common.Activities
 			bool IsTurn(Actor self, Mobile mobile, CPos nextCell, Map map)
 			{
 				// Some actors with a limited number of sprite facings should never move along curved trajectories.
-				if (mobile.Info.AlwaysTurnInPlace)
+				if (mobile.Info.AlwaysTurnInPlace || TurnsWhileMoving)
 					return false;
 
 				// When Backwards duration runs out, let the Move activity do the turn.
-				if (Move.actorFacingModifier != WAngle.Zero && self.World.WorldTick - Move.startTicks >= mobile.Info.BackwardDuration)
+				if (Move.ActorFacingModifier != WAngle.Zero && self.World.WorldTick - Move.startTicks >= mobile.Info.BackwardDuration)
 					return false;
 
 				// Tight U-turns should be done in place instead of making silly looking loops.
@@ -523,7 +533,7 @@ namespace OpenRA.Mods.Common.Activities
 							Util.BetweenCells(self.World, mobile.FromCell, mobile.ToCell) + (fromSubcellOffset + toSubcellOffset) / 2,
 							Util.BetweenCells(self.World, mobile.ToCell, nextCell.Value.Cell) + (toSubcellOffset + nextSubcellOffset) / 2,
 							mobile.Facing,
-							map.FacingBetween(mobile.ToCell, nextCell.Value.Cell, mobile.Facing) + Move.actorFacingModifier,
+							map.FacingBetween(mobile.ToCell, nextCell.Value.Cell, mobile.Facing) + Move.ActorFacingModifier,
 							ToTerrainOrientation,
 							nextToTerrainOrientation,
 							margin,
