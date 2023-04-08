@@ -192,7 +192,9 @@ namespace OpenRA.Mods.Common.Activities
 				toTerrainOrientation = WRot.SLerp(map.TerrainOrientation(mobile.FromCell), map.TerrainOrientation(mobile.ToCell), 1, 2);
 
 			var movingOnGroundLayer = mobile.FromCell.Layer == 0 && mobile.ToCell.Layer == 0;
-			QueueChild(new MoveFirstHalf(this, from, to, mobile.Facing, mobile.Facing, null, toTerrainOrientation, margin, carryoverProgress, movingOnGroundLayer));
+
+			var toFacing = mobile.Info.TurnsWhileMoving ? ActorFacingModifier + (to - from).Yaw : mobile.Facing;
+			QueueChild(new MoveFirstHalf(this, from, to, mobile.Facing, toFacing, null, toTerrainOrientation, margin, carryoverProgress, movingOnGroundLayer));
 			carryoverProgress = 0;
 			return false;
 		}
@@ -390,8 +392,6 @@ namespace OpenRA.Mods.Common.Activities
 				IsInterruptible = false; // See comments in Move.Cancel()
 
 				TurnsWhileMoving = move.mobile.Info.TurnsWhileMoving;
-				if (TurnsWhileMoving)
-					ToFacing = TurnsWhileMoving ? (To - From).Yaw + Move.ActorFacingModifier : toFacing;
 
 				// Calculate an elliptical arc that joins from and to
 				var delta = (fromFacing - toFacing).Angle;
@@ -528,12 +528,15 @@ namespace OpenRA.Mods.Common.Activities
 						if (margin >= 0)
 							nextToTerrainOrientation = WRot.SLerp(map.TerrainOrientation(mobile.ToCell), map.TerrainOrientation(nextCell.Value.Cell), 1, 2);
 
+						var from = Util.BetweenCells(self.World, mobile.FromCell, mobile.ToCell) + (fromSubcellOffset + toSubcellOffset) / 2;
+						var to = Util.BetweenCells(self.World, mobile.ToCell, nextCell.Value.Cell) + (toSubcellOffset + nextSubcellOffset) / 2;
+
 						var ret = new MoveFirstHalf(
 							Move,
-							Util.BetweenCells(self.World, mobile.FromCell, mobile.ToCell) + (fromSubcellOffset + toSubcellOffset) / 2,
-							Util.BetweenCells(self.World, mobile.ToCell, nextCell.Value.Cell) + (toSubcellOffset + nextSubcellOffset) / 2,
+							from,
+							to,
 							mobile.Facing,
-							map.FacingBetween(mobile.ToCell, nextCell.Value.Cell, mobile.Facing) + Move.ActorFacingModifier,
+							TurnsWhileMoving ? (to - from).Yaw + Move.ActorFacingModifier : map.FacingBetween(mobile.ToCell, nextCell.Value.Cell, mobile.Facing) + Move.ActorFacingModifier,
 							ToTerrainOrientation,
 							nextToTerrainOrientation,
 							margin,
@@ -548,15 +551,15 @@ namespace OpenRA.Mods.Common.Activities
 					parent.path.Add(nextCell.Value.Cell);
 				}
 
-				var toPos = mobile.ToCell.Layer == 0 ? map.CenterOfCell(mobile.ToCell) :
-					self.World.GetCustomMovementLayers()[mobile.ToCell.Layer].CenterOfCell(mobile.ToCell);
+				var fromPos = Util.BetweenCells(self.World, mobile.FromCell, mobile.ToCell) + (fromSubcellOffset + toSubcellOffset) / 2;
+				var toPos = (mobile.ToCell.Layer == 0 ? map.CenterOfCell(mobile.ToCell) : self.World.GetCustomMovementLayers()[mobile.ToCell.Layer].CenterOfCell(mobile.ToCell)) + toSubcellOffset;
 
 				var ret2 = new MoveSecondHalf(
 					Move,
-					Util.BetweenCells(self.World, mobile.FromCell, mobile.ToCell) + (fromSubcellOffset + toSubcellOffset) / 2,
-					toPos + toSubcellOffset,
+					fromPos,
+					toPos,
 					mobile.Facing,
-					mobile.Facing,
+					TurnsWhileMoving ? (toPos - fromPos).Yaw + Move.ActorFacingModifier : mobile.Facing,
 					ToTerrainOrientation,
 					null,
 					mobile.Info.TerrainOrientationAdjustmentMargin.Length,
