@@ -132,7 +132,10 @@ namespace OpenRA.Mods.Common.Graphics
 				var draw = model.models.Where(v => v.IsVisible);
 
 				var map = wr.World.Map;
-				var groundOrientation = map.TerrainOrientation(map.CellContaining(model.pos));
+				var groundOrientation = WRot.None;
+				if (map.DistanceAboveTerrain(model.pos).Length < 512)
+					groundOrientation = map.TerrainOrientation(map.CellContaining(model.pos));
+
 				renderProxy = Game.Renderer.WorldModelRenderer.RenderAsync(
 					wr, draw, model.camera, model.scale, groundOrientation, model.lightSource,
 					model.lightAmbientColor, model.lightDiffuseColor,
