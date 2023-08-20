@@ -1,6 +1,6 @@
 ﻿#region Copyright & License Information
 /*
- * Copyright 2007-2020 The OpenRA Developers (see AUTHORS)
+ * Copyright 2007-2023 The OpenRA Developers (see AUTHORS)
  * This file is part of OpenRA, which is free software. It is made
  * available to you under the terms of the GNU General Public License
  * as published by the Free Software Foundation, either version 3 of
@@ -18,30 +18,30 @@ using OpenRA.Traits;
 namespace OpenRA.Mods.AS.Traits
 {
 	[TraitLocation(SystemActors.Player)]
-	[Desc("Manages AI powerdown.")]
+	[Desc("Manages AI powerdown.",
+		"You need to use PowerMultiplier on toggle control only on related buildings, for calculation of this bot module")]
 	public class PowerDownBotASModuleInfo : ConditionalTraitInfo
 	{
 		[Desc("Delay (in ticks) between toggling powerdown.")]
 		public readonly int Interval = 150;
 
-		[Desc("Order string that used for powerdown.")]
-		public readonly string OrderName = "PowerDown";
-
 		public override object Create(ActorInitializer init) { return new PowerDownBotASModule(init.Self, this); }
 	}
 
-	public class PowerDownBotASModule : ConditionalTrait<PowerDownBotASModuleInfo>, IBotTick
+	public class PowerDownBotASModule : ConditionalTrait<PowerDownBotASModuleInfo>, IBotTick, IGameSaveTraitData
 	{
 		readonly World world;
 		readonly Player player;
+
 		PowerManager playerPower;
 		int toggleTick;
+
 		readonly Func<Actor, bool> isToggledBuildingsValid;
 
 		// We keep a list to track toggled buildings for performance.
-		List<BuildingPowerWrapper> toggledBuildings;
+		List<BuildingPowerWrapper> toggledBuildings = new List<BuildingPowerWrapper>();
 
-		class BuildingPowerWrapper
+		sealed class BuildingPowerWrapper
 		{
 			public int ExpectedPowerChanging;
 			public Actor Actor;
@@ -58,8 +58,8 @@ namespace OpenRA.Mods.AS.Traits
 		{
 			world = self.World;
 			player = self.Owner;
-			toggledBuildings = new List<BuildingPowerWrapper>();
-			isToggledBuildingsValid = a => a.Owner == self.Owner && !a.IsDead && a.IsInWorld;
+
+			isToggledBuildingsValid = a => a != null && a.Owner == self.Owner && !a.IsDead && a.IsInWorld;
 		}
 
 		protected override void Created(Actor self)
@@ -70,14 +70,13 @@ namespace OpenRA.Mods.AS.Traits
 		protected override void TraitEnabled(Actor self)
 		{
 			toggleTick = world.LocalRandom.Next(Info.Interval);
-			toggledBuildings = new List<BuildingPowerWrapper>();
 		}
 
-		int GetTogglePowerChanging(Actor a)
+		static int GetTogglePowerChanging(Actor a)
 		{
 			var powerChangingIfToggled = 0;
 			var powerTraits = a.TraitsImplementing<Power>().Where(t => !t.IsTraitDisabled).ToArray();
-			if (powerTraits.Any())
+			if (powerTraits.Length > 0)
 			{
 				var powerMulTraits = a.TraitsImplementing<PowerMultiplier>().ToArray();
 				powerChangingIfToggled = powerTraits.Sum(p => p.Info.Amount) * (powerMulTraits.Sum(p => p.Info.Modifier) - 100) / 100;
@@ -154,11 +153,42 @@ namespace OpenRA.Mods.AS.Traits
 			}
 
 			if (togglingBuildings.Count > 0)
-			{
-				bot.QueueOrder(new Order(Info.OrderName, null, false, groupedActors: togglingBuildings.ToArray()));
-			}
+				bot.QueueOrder(new Order("PowerDown", null, false, groupedActors: togglingBuildings.ToArray()));
 
 			toggleTick = Info.Interval;
+		}
+
+		List<MiniYamlNode> IGameSaveTraitData.IssueTraitData(Actor self)
+		{
+			if (IsTraitDisabled)
+				return null;
+
+			var data = new List<MiniYamlNode>();
+			foreach (var tb in toggledBuildings.Where(td => isToggledBuildingsValid(td.Actor)))
+				data.Add(new MiniYamlNode(FieldSaver.FormatValue(tb.Actor.ActorID), FieldSaver.FormatValue(tb.ExpectedPowerChanging)));
+
+			return new List<MiniYamlNode>()
+			{
+				new MiniYamlNode("ToggledBuildings", new MiniYaml("", data))
+			};
+		}
+
+		void IGameSaveTraitData.ResolveTraitData(Actor self, List<MiniYamlNode> data)
+		{
+			if (self.World.IsReplay)
+				return;
+
+			var toggledBuildingsNode = data.FirstOrDefault(n => n.Key == "ToggledBuildings");
+			if (toggledBuildingsNode != null)
+			{
+				foreach (var n in toggledBuildingsNode.Value.Nodes)
+				{
+					var a = self.World.GetActorById(FieldLoader.GetValue<uint>(n.Key, n.Key));
+
+					if (isToggledBuildingsValid(a))
+						toggledBuildings.Add(new BuildingPowerWrapper(a, FieldLoader.GetValue<int>(n.Key, n.Value.Value)));
+				}
+			}
 		}
 	}
 }
