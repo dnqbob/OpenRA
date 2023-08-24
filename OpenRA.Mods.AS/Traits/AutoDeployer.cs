@@ -38,8 +38,9 @@ namespace OpenRA.Mods.AS.Traits
 		[Desc("Delay between two successful deploy orders.")]
 		public readonly int DeployTicks = 2500;
 
-		[Desc("Delay to wait for the actor to undeploy (if capable to) after a successful deploy.")]
-		public readonly int UndeployTicks = 450;
+		[Desc("Delay to wait for the actor to undeploy (if capable to) after a successful deploy.",
+			"Note: this option is for GrantConditionOnDeploy only. Set it to -1 to disable.")]
+		public readonly int UndeployTicks = -1;
 
 		public override object Create(ActorInitializer init) { return new AutoDeployer(this); }
 	}
@@ -48,10 +49,7 @@ namespace OpenRA.Mods.AS.Traits
 	public class AutoDeployer : ConditionalTrait<AutoDeployerInfo>, INotifyAttack, ITick, INotifyDamage, INotifyCreated, ISync, INotifyOwnerChanged, INotifyDeployComplete, INotifyBecomingIdle
 	{
 		public const string PrimaryBuildingOrderID = "PrimaryProducer";
-
-		[Sync]
 		int undeployTicks = -1, deployTicks;
-
 		bool deployed;
 		public bool PrimaryBuilding;
 		public IIssueDeployOrder[] DeployTraits;
@@ -69,7 +67,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void TryDeploy(Actor self)
 		{
-			if (deployTicks > 0 || autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || deployTicks > 0 || autoDeployManager.IsTraitDisabled)
 				return;
 
 			autoDeployManager.AddEntry(new TraitPair<AutoDeployer>(self, this));
@@ -80,7 +78,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void Undeploy(Actor self)
 		{
-			if (autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || autoDeployManager.IsTraitDisabled)
 				return;
 
 			autoDeployManager.AddUndeployOrders(new Order("GrantConditionOnDeploy", self, false));
@@ -88,7 +86,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void INotifyAttack.Attacking(Actor self, in Target target, Armament a, Barrel barrel)
 		{
-			if (IsTraitDisabled || autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || IsTraitDisabled || autoDeployManager.IsTraitDisabled)
 				return;
 
 			if (Info.DeployTrigger.HasFlag(DeployTriggers.Attack))
@@ -99,10 +97,10 @@ namespace OpenRA.Mods.AS.Traits
 
 		void ITick.Tick(Actor self)
 		{
-			if (IsTraitDisabled || autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || IsTraitDisabled || autoDeployManager.IsTraitDisabled)
 				return;
 
-			if (deployed)
+			if (deployed && Info.UndeployTicks > -1)
 			{
 				if (--undeployTicks < 0)
 				{
@@ -119,7 +117,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void INotifyDamage.Damaged(Actor self, AttackInfo e)
 		{
-			if (IsTraitDisabled || autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || IsTraitDisabled || autoDeployManager.IsTraitDisabled)
 				return;
 
 			if (e.Damage.Value > 0 && Info.DeployTrigger.HasFlag(DeployTriggers.Damage))
@@ -146,7 +144,7 @@ namespace OpenRA.Mods.AS.Traits
 
 		void INotifyBecomingIdle.OnBecomingIdle(Actor self)
 		{
-			if (IsTraitDisabled || autoDeployManager.IsTraitDisabled)
+			if (!autoDeployManager.ManagerRunning || IsTraitDisabled || autoDeployManager.IsTraitDisabled)
 				return;
 
 			if (Info.DeployTrigger.HasFlag(DeployTriggers.BecomingIdle))
