@@ -255,7 +255,7 @@ namespace OpenRA.Mods.Common.Traits
 			return Info.Voice;
 		}
 
-		bool CanDeploy()
+		public bool CanDeploy()
 		{
 			if (IsTraitPaused || IsTraitDisabled)
 				return false;
