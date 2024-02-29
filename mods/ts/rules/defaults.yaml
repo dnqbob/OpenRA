@@ -843,7 +843,7 @@
 	SpeedMultiplier@CRITICAL:
 		RequiresCondition: criticalspeed
 		Modifier: 60
-	Carryable:
+	AutoCarryable:
 		RequiresCondition: !inside-tunnel
 		LockedCondition: carried
 	RevealOnFire:

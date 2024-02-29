@@ -319,8 +319,14 @@ TRNSPORT:
 		Roll: 0
 		TakeoffSounds: dropup1.aud
 		LandingSounds: dropdwn1.aud
-	Carryall:
+	GrantConditionOnDeploy@AUTO:
+		DeployedCondition: manual
+		CanDeployOnRamps: true
+		SkipMakeAnimation: true
+		Voice:
+	AutoCarryall:
 		Voice: Move
+		AutoCarryCondition: !manual
 		LocalOffset: 0,0,-317
 		BeforeLoadDelay: 10
 		BeforeUnloadDelay: 10
@@ -342,6 +348,12 @@ TRNSPORT:
 		RequiresCondition: empdisable
 	WithAircraftLandingEffect:
 		Image: caryland
+	WithTextDecoration@AUTO:
+		UsePlayerColor: true
+		Text: AUTO
+		Position: Top
+		ValidRelationships: Ally
+		RequiresCondition: !manual
 
 SCRIN:
 	Inherits: ^EMPableAircraft

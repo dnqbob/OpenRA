@@ -58,6 +58,7 @@ HARV:
 	Selectable:
 		Bounds: 1086, 2172
 		DecorationBounds: 1086, 2172
+	CarryableHarvester:
 	Harvester:
 		Resources: Tiberium, BlueTiberium
 		BaleLoadDelay: 15
