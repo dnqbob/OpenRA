@@ -17,6 +17,7 @@ using OpenRA.Traits;
 namespace OpenRA.Mods.Common.Warheads
 {
 	public enum DamageCalculationType { HitShape, ClosestTargetablePosition, CenterPosition }
+	public enum UnintendedFriendlyFireType { None, Unfriendly, UnfriendlyAndTerrain }
 
 	[Desc("Apply damage in a specified range.")]
 	public class SpreadDamageWarhead : DamageWarhead, IRulesetLoaded<WeaponInfo>
@@ -33,7 +34,15 @@ namespace OpenRA.Mods.Common.Warheads
 		[Desc("Controls the way damage is calculated. Possible values are 'HitShape', 'ClosestTargetablePosition' and 'CenterPosition'.")]
 		public readonly DamageCalculationType DamageCalculationType = DamageCalculationType.HitShape;
 
+		[Desc("If attacker doesn't intent, this warhead won't hurt friendly actor. " +
+			"Possible values are 'None' (unintended friendly fire always on), " +
+			"'Unfriendly' (unintended friendly fire is off when attack unfriendly actor) and " +
+			"'UnfriendlyAndTerrain' (unintended friendly is off when attack unfriendly actor and terrain) .")]
+		public readonly UnintendedFriendlyFireType NoUnintendedFriendlyFireType = UnintendedFriendlyFireType.None;
+
 		WDist[] effectiveRange;
+
+		bool noFriendlyFire = false;
 
 		void IRulesetLoaded<WeaponInfo>.RulesetLoaded(Ruleset rules, WeaponInfo info)
 		{
@@ -58,9 +67,27 @@ namespace OpenRA.Mods.Common.Warheads
 			if (debugVis != null && debugVis.CombatGeometry)
 				firedBy.World.WorldActor.Trait<WarheadDebugOverlay>().AddImpact(pos, effectiveRange, DebugOverlayColor);
 
+			if (NoUnintendedFriendlyFireType != UnintendedFriendlyFireType.None)
+			{
+				var intentTarget = args.WeaponTarget;
+				switch (intentTarget.Type)
+				{
+					case TargetType.Actor:
+						noFriendlyFire = intentTarget.Actor.Owner.RelationshipWith(firedBy.Owner) != PlayerRelationship.Ally;
+						break;
+					case TargetType.FrozenActor:
+						noFriendlyFire = intentTarget.FrozenActor.Owner.RelationshipWith(firedBy.Owner) != PlayerRelationship.Ally;
+						break;
+					default:
+						if (NoUnintendedFriendlyFireType == UnintendedFriendlyFireType.UnfriendlyAndTerrain)
+							noFriendlyFire = true;
+						break;
+				}
+			}
+
 			foreach (var victim in firedBy.World.FindActorsOnCircle(pos, effectiveRange[^1]))
 			{
-				if (!IsValidAgainst(victim, firedBy))
+				if (!IsValidAgainst(victim, firedBy) || (noFriendlyFire && victim.Owner.RelationshipWith(firedBy.Owner) == PlayerRelationship.Ally))
 					continue;
 
 				HitShape closestActiveShape = null;
