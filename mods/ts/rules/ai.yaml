@@ -119,3 +119,5 @@ Player:
 		MinimumConstructionYardCount: 2
 		ResourceCreatorTypes: tibtre01, tibtre02, tibtre03, bigblue, bigblue3
 		ValidResourceTypes: BlueTiberium, Tiberium, Veins
+		InitialExpansionMode:  CheckResource #CheckBase # CheckResourceCreator
+		ExpansionModeAutoSwitch: false
