@@ -346,6 +346,9 @@ Player:
 		FirstMoveConyardTicks: 4200
 		ResourceCreatorTypes: mine, gmine
 		ValidResourceTypes: Ore, Gems
+		## Debug: change here for different modes
+		InitialExpansionMode:  CheckResource #CheckBase # CheckResourceCreator
+		ExpansionModeAutoSwitch: false
 		MinimumConstructionYardCount: 2
 	McvExpansionManagerBotModule@turtle:
 		RequiresCondition: enable-turtle-ai
@@ -358,6 +361,9 @@ Player:
 		ValidResourceTypes: Ore, Gems
 		MoveConyardTick: 5500
 		MinimumConstructionYardCount: 2
+		## Debug: change here for different modes
+		InitialExpansionMode:  CheckResource #CheckBase # CheckResourceCreator
+		ExpansionModeAutoSwitch: false
 	UnitBuilderBotModule@rush:
 		RequiresCondition: enable-rush-ai
 		UnitsToBuild:

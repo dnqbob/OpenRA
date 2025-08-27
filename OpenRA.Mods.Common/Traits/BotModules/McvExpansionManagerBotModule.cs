@@ -12,6 +12,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenRA.Graphics;
+using OpenRA.Mods.Common.Effects;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Traits
@@ -128,7 +130,12 @@ namespace OpenRA.Mods.Common.Traits
 		public override object Create(ActorInitializer init) { return new McvExpansionManagerBotModule(init.Self, this); }
 	}
 
-	public class McvExpansionManagerBotModule : ConditionalTrait<McvExpansionManagerBotModuleInfo>, IBotTick, IBotRespondToAttack, INotifyActorDisposing
+	public class McvExpansionManagerBotModule :
+		ConditionalTrait<McvExpansionManagerBotModuleInfo>,
+		IBotTick,
+		IBotRespondToAttack,
+		INotifyActorDisposing,
+		ITickRender
 	{
 		// When ExpansionModeAutoSwitch is true, if the AI fails to find a deploy spot enough time even in CheckBase mode
 		// NegativeMaxFailedAttempts is applied to make AI switch bettween modes more frequently until a successful attempt
@@ -163,6 +170,11 @@ namespace OpenRA.Mods.Common.Traits
 		int maxFailedAttempts = PositiveMaxFailedAttempts;
 		int failedAttempts;
 		CPos? lastFailedCheckSpot;
+		CPos? debugexpansioncell; //--used as debug
+		int debugattr; //--used as debug
+		bool useRecheckLoc; //--used as debug
+		int worldrendertick; //--used as debug
+		bool shouldshowdebug; //--used as debug
 
 		// It is unnecessary to respond every tick, we only need to respond once in a while.
 		int attackrespondcooldown = 20;
@@ -626,6 +638,8 @@ namespace OpenRA.Mods.Common.Traits
 
 			if (firstTick)
 			{
+				shouldshowdebug = !IsTraitDisabled && world.Players.FirstOrDefault(p => p.IsBot && !p.NonCombatant) == player; // -- used as debug
+
 				var resourceSum = 0;
 
 				if (resourceMapIndices == null)
@@ -648,7 +662,7 @@ namespace OpenRA.Mods.Common.Traits
 					resourceMapIndices = Exts.MakeArray(resourceMapIndicesColumnCount * resourceMapIndicesRowCount, i => (new MPos(
 						xoffset + i % resourceMapIndicesColumnCount * indiceSideLength + (indiceSideLength >> 1),
 						yoffset + i / resourceMapIndicesColumnCount * indiceSideLength + (indiceSideLength >> 1)).ToCPos(map), 0, CPos.Zero))
-						.Shuffle(world.LocalRandom).ToArray();
+						.ToArray();
 
 					// Note: we can only get map resource data in IBotTick.BotTick, instead of TraitEnabled or Created.
 					for (var i = 0; i < resourceMapIndices.Length; i++)
@@ -884,6 +898,7 @@ namespace OpenRA.Mods.Common.Traits
 			// Find the deployable cell
 			CPos? FindDeployCell(CPos? sourceCell, CPos? targetCell, int minRange, int maxRange, int tryMaintainRange)
 			{
+				useRecheckLoc = false; //--used as debug
 				if (!sourceCell.HasValue || !targetCell.HasValue)
 					return null;
 
@@ -935,6 +950,9 @@ namespace OpenRA.Mods.Common.Traits
 							if (mobile != null && !pathfinder.PathMightExistForLocomotorBlockedByImmovable(mobile.Locomotor, source, cell))
 								return null;
 
+							if ((!bestcell.HasValue) || (cell - target).LengthSquared < (bestcell.Value - target).LengthSquared) //--used as debug
+								useRecheckLoc = true; //--used as debug
+
 							return (!bestcell.HasValue) || (cell - target).LengthSquared < (bestcell.Value - target).LengthSquared ? cell : bestcell;
 						}
 					}
@@ -944,6 +962,9 @@ namespace OpenRA.Mods.Common.Traits
 			}
 
 			var bc = FindDeployCell(mcv.Location, expandCenter, mcvDeploymentMinDeployRadius, mcvDeploymentMaxDeployRadius, mcvDeploymentTryMaintainRange);
+
+			debugexpansioncell = expandCenter; //--used as debug
+			debugattr = attraction; //--used as debug
 
 			// At last, if the attraction of the found expansion location is good enough (>0) and deploy cell found,
 			// we consider it as a good expansion, otherwise, we consider it as a bad expansion.
@@ -976,6 +997,49 @@ namespace OpenRA.Mods.Common.Traits
 			mcvs.Dispose();
 			constructionYards.Dispose();
 			mcvFactories.Dispose();
+		}
+
+		//--used as debug
+		void ITickRender.TickRender(WorldRenderer wr, Actor self)
+		{
+			if (worldrendertick == world.WorldTick || IsTraitDisabled)
+				return;
+
+			worldrendertick = world.WorldTick;
+
+			if (shouldshowdebug && resourceMapIndices != null)
+			{
+				for (var k = 0; k < resourceMapIndices.Length; k++)
+				{
+					var j = new FloatingText(
+					world.Map.CenterOfCell(resourceMapIndices[k].IndiceCenter),
+					player.Color,
+					$"Resource: {resourceMapIndices[k].Value}, I am in col{k % resourceMapIndicesColumnCount + 1}, row{k / resourceMapIndicesColumnCount + 1}. The map divide into {resourceMapIndicesColumnCount} cols {resourceMapIndicesRowCount} rows",
+					1);
+
+					world.Add(j);
+
+					if (resourceMapIndices[k].Value > 0)
+					{
+						var u = new FloatingText(
+						world.Map.CenterOfCell(resourceMapIndices[k].ResourceCenter),
+						player.Color,
+						"<>",
+						1);
+
+						world.Add(u);
+					}
+				}
+			}
+
+			if (debugexpansioncell == null)
+				return;
+			var i = new FloatingText(
+				world.Map.CenterOfCell(debugexpansioncell.Value),
+				player.Color,
+				$"{mcvExpansionMode}: Ideal Point {debugattr}.{(useRecheckLoc ? "Use recheck location" : "")}",
+				1);
+			world.Add(i);
 		}
 	}
 }
