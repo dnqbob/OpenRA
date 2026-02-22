@@ -131,7 +131,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public readonly World World;
 		public readonly Player Player;
-		public readonly int RepeatedAltertTicks = 15;
+		const int MaxRespondToAttackCooldown = 20;
 
 		public readonly Predicate<Actor> UnitCannotBeOrdered;
 		readonly List<UnitWposWrapper> unitsHangingAroundTheBase = new();
@@ -149,19 +149,20 @@ namespace OpenRA.Mods.Common.Traits
 
 		CPos initialBaseCenter;
 		Actor airStrikeTarget;
+		Actor protectFrom;
 
 		int attackForceTicks;
 
 		int minAttackForceDelayTicks;
 
-		int alertedTicks;
+		int respondToAttackCooldown = MaxRespondToAttackCooldown; // prevent too many responses to the same wave of attacks
 
 		public SquadManagerBotModule(Actor self, SquadManagerBotModuleInfo info)
 			: base(info)
 		{
 			World = self.World;
 			Player = self.Owner;
-			alertedTicks = 0;
+			respondToAttackCooldown = 0;
 
 			UnitCannotBeOrdered = a => a == null || a.Owner != Player || a.IsDead || !a.IsInWorld || a.CurrentActivity is Enter;
 			constructionYardBuildings = new ActorIndex.OwnerAndNamesAndTrait<BuildingInfo>(World, info.ConstructionYardTypes, Player);
@@ -231,8 +232,6 @@ namespace OpenRA.Mods.Common.Traits
 				airStrikeTarget = null;
 
 			AssignRolesToIdleUnits(bot);
-			if (alertedTicks > 0)
-				alertedTicks--;
 		}
 
 		internal Actor FindClosestEnemy(Actor sourceActor, WDist radius)
@@ -342,6 +341,9 @@ namespace OpenRA.Mods.Common.Traits
 				unitsHangingAroundTheBase.RemoveAll(u => UnitCannotBeOrdered(u.Actor));
 				CreateAttackForce(bot);
 			}
+
+			if (respondToAttackCooldown-- == MaxRespondToAttackCooldown)
+				ProtectOwn(protectFrom);
 		}
 
 		void FindNewUnits(IBot bot)
@@ -427,6 +429,9 @@ namespace OpenRA.Mods.Common.Traits
 
 		void ProtectOwn(Actor attacker)
 		{
+			if (!IsPreferredEnemyUnit(attacker))
+				return;
+
 			foreach (var s in Squads.Where(s => s.IsValid))
 			{
 				if (s.Type != SquadType.Protection
@@ -468,21 +473,20 @@ namespace OpenRA.Mods.Common.Traits
 
 		void IBotRespondToAttack.RespondToAttack(IBot bot, Actor self, AttackInfo e)
 		{
-			if (alertedTicks > 0)
+			if (respondToAttackCooldown > 0)
 				return;
 
 			var attacker = GetValidAttacker(e.Attacker);
 			if (attacker == null)
 				return;
 
-			alertedTicks = RepeatedAltertTicks;
-
 			if (Info.ProtectionTypes.Contains(self.Info.Name))
 			{
 				foreach (var n in notifyPositionsUpdated)
 					n.UpdatedDefenseCenter(attacker.Location);
 
-				ProtectOwn(attacker);
+				respondToAttackCooldown = MaxRespondToAttackCooldown;
+				protectFrom = e.Attacker;
 			}
 		}
 

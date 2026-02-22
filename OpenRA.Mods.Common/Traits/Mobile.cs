@@ -43,6 +43,12 @@ namespace OpenRA.Mods.Common.Traits
 		[Desc("If set to true, this unit won't stop to turn, it will turn while moving instead.")]
 		public readonly bool TurnsWhileMoving = false;
 
+		[Desc("Requires" + nameof(TurnsWhileMoving) + ". If set to true, The speed decreases as the difference bettween current facing and the moving direction increases.")]
+		public readonly bool SpeedRelatedWithFacing = false;
+
+		[Desc("Requires" + nameof(SpeedRelatedWithFacing) + ". The minimum speed percentage during turning. Allows negative number.")]
+		public readonly int InitSpeedPercentageWithFacing = 0;
+
 		[CursorReference]
 		[Desc("Cursor to display when a move order can be issued at target location.")]
 		public readonly string Cursor = "move";
@@ -1005,6 +1011,23 @@ namespace OpenRA.Mods.Common.Traits
 				if (rallyPoint != null)
 					foreach (var cell in rallyPoint)
 						QueueChild(new AttackMoveActivity(self, () => mobile.MoveTo(cell, 1, evaluateNearestMovableCell: true, targetLineColor: Color.OrangeRed)));
+			}
+
+			public override IEnumerable<Target> GetTargets(Actor self)
+			{
+				if (ChildActivity != null)
+					return ChildActivity.GetTargets(self);
+
+				return Target.None;
+			}
+
+			public override IEnumerable<TargetLineNode> TargetLineNodes(Actor self)
+			{
+				var a = ChildActivity;
+				for (; a != null; a = a.NextActivity)
+					if (!a.IsCanceling)
+						foreach (var n in a.TargetLineNodes(self))
+							yield return n;
 			}
 		}
 

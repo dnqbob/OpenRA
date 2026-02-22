@@ -308,7 +308,7 @@ namespace OpenRA.Mods.Common.Traits
 			return self.CenterPosition - new WVec(WDist.Zero, WDist.Zero, self.World.Map.DistanceAboveTerrain(self.CenterPosition));
 		}
 
-		public bool AtLandAltitude => self.World.Map.DistanceAboveTerrain(GetPosition()) == LandAltitude;
+		public bool AtLandAltitude => self.World.Map.DistanceAboveTerrain(self.CenterPosition) == LandAltitude;
 
 		bool airborne;
 		bool cruising;
@@ -348,15 +348,6 @@ namespace OpenRA.Mods.Common.Traits
 
 				return alt;
 			}
-		}
-
-		public WPos GetPosition()
-		{
-			var pos = self.CenterPosition;
-			foreach (var offset in positionOffsets)
-				pos += offset.PositionOffset;
-
-			return pos;
 		}
 
 		public override IEnumerable<VariableObserver> GetVariableObservers()
@@ -1344,9 +1335,11 @@ namespace OpenRA.Mods.Common.Traits
 
 			public override IEnumerable<TargetLineNode> TargetLineNodes(Actor self)
 			{
-				if (ChildActivity != null)
-					foreach (var n in ChildActivity.TargetLineNodes(self))
-						yield return n;
+				var a = ChildActivity;
+				for (; a != null; a = a.NextActivity)
+					if (!a.IsCanceling)
+						foreach (var n in a.TargetLineNodes(self))
+							yield return n;
 			}
 		}
 
