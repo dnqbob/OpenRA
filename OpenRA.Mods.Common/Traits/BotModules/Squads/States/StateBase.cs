@@ -201,7 +201,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules.Squads
 
 		protected static bool IsRearming(Actor a)
 		{
-			return !a.IsIdle && (a.CurrentActivity.ActivitiesImplementing<Resupply>().Any() || a.CurrentActivity.ActivitiesImplementing<ReturnToBase>().Any());
+			return a.CurrentActivity is ReturnToBase;
 		}
 
 		protected static bool FullAmmo(IEnumerable<AmmoPool> ammoPools)

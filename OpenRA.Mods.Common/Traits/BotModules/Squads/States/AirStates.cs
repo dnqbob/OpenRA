@@ -95,10 +95,15 @@ namespace OpenRA.Mods.Common.Traits.BotModules.Squads
 
 		public void Activate(Squad owner)
 		{
-			dangerRadius = owner.SquadManager.Info.DangerScanRadius;
 			map = owner.World.Map;
-			columnCount = (map.MapSize.X + dangerRadius - 1) / dangerRadius;
-			rowCount = (map.MapSize.Y + dangerRadius - 1) / dangerRadius;
+			dangerRadius = owner.SquadManager.Info.DangerScanRadius;
+			var dangerIndiceSideLength = dangerRadius * 141 / 100; // ¡Ö DangerScanRadius * sqrt(2)
+
+			columnCount = (map.Bounds.Width + dangerIndiceSideLength - 1) / dangerIndiceSideLength;
+			rowCount = (map.Bounds.Height + dangerIndiceSideLength - 1) / dangerIndiceSideLength;
+			var xoffset = map.Bounds.X;
+			var yoffset = map.Bounds.Y;
+
 			airStrikeCheckIndices ??= Exts.MakeArray(columnCount * rowCount, i => i).Shuffle(owner.World.LocalRandom).ToArray();
 		}
 
@@ -204,17 +209,14 @@ namespace OpenRA.Mods.Common.Traits.BotModules.Squads
 					continue;
 				}
 
-				var ammoPools = u.Actor.TraitsImplementing<AmmoPool>().ToArray();
-				if (!ReloadsAutomatically(ammoPools, u.Actor.TraitOrDefault<Rearmable>()))
-				{
-					if (IsRearming(u.Actor))
-						continue;
+				if (IsRearming(u.Actor))
+					continue;
 
-					if (!HasAmmo(ammoPools))
-					{
-						resupplyingUnits.Add(u.Actor);
-						continue;
-					}
+				var ammoPools = u.Actor.TraitsImplementing<AmmoPool>().ToArray();
+				if (!ReloadsAutomatically(ammoPools, u.Actor.TraitOrDefault<Rearmable>()) && !HasAmmo(ammoPools))
+				{
+					resupplyingUnits.Add(u.Actor);
+					continue;
 				}
 
 				if (CanAttackTarget(u.Actor, owner.TargetActor))
