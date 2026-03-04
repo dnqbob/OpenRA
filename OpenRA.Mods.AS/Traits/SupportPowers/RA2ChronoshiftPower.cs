@@ -202,7 +202,7 @@ namespace OpenRA.Mods.AS.Traits
 			if (level == 0)
 				return false;
 
-			if (!Self.Owner.Shroud.IsExplored(xy))
+			if (!Self.Owner.IsBot && !Self.Owner.Shroud.IsExplored(xy))
 				return false;
 
 			var footprint = footprints.First(f => f.Key == level).Value;
@@ -219,7 +219,7 @@ namespace OpenRA.Mods.AS.Traits
 					var a = se.Current;
 					var b = de.Current;
 
-					if (!Self.Owner.Shroud.IsExplored(a) || !Self.Owner.Shroud.IsExplored(b))
+					if (!Self.Owner.IsBot && (!Self.Owner.Shroud.IsExplored(a) || !Self.Owner.Shroud.IsExplored(b)))
 						return false;
 
 					if (Self.World.Map.GetTerrainIndex(a) != Self.World.Map.GetTerrainIndex(b))
