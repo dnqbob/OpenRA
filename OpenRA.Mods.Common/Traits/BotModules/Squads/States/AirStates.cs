@@ -109,6 +109,8 @@ namespace OpenRA.Mods.Common.Traits.BotModules.Squads
 
 		Actor FindDefenselessTarget(Squad owner)
 		{
+			var position = owner.Units[0].Actor.CenterPosition;
+
 			for (var checktime = 0; checktime <= MaxCheckTimesPerTick; checkedIndex++, checktime++)
 			{
 				if (checkedIndex >= airStrikeCheckIndices.Length)
@@ -117,14 +119,19 @@ namespace OpenRA.Mods.Common.Traits.BotModules.Squads
 				var pos = new MPos(airStrikeCheckIndices[checkedIndex] % columnCount * dangerRadius + dangerRadius / 2,
 					airStrikeCheckIndices[checkedIndex] / columnCount * dangerRadius + dangerRadius / 2).ToCPos(map);
 
-				if (NearToPosSafely(owner, map.CenterOfCell(pos), out var detectedEnemyTarget))
-				{
-					if (detectedEnemyTarget == null)
-						continue;
+				var wpos = map.CenterOfCell(pos);
 
-					checkedIndex = owner.World.LocalRandom.Next(airStrikeCheckIndices.Length);
-					return detectedEnemyTarget;
-				}
+				// check the targets along the flight path, pick a random safe target to engage.
+				var actors = owner.World.FindActorsOnLine(position, wpos, WDist.FromCells(dangerRadius)).Where(owner.SquadManager.IsPreferredEnemyUnit).ToList();
+				if (CountAntiAirUnits(owner, actors) * 3 > owner.Units.Count)
+					continue;
+
+				var detectedEnemyTarget = actors.RandomOrDefault(owner.World.LocalRandom);
+				if (detectedEnemyTarget == null)
+					continue;
+
+				checkedIndex = owner.World.LocalRandom.Next(airStrikeCheckIndices.Length);
+				return detectedEnemyTarget;
 			}
 
 			return null;
