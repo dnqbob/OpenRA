@@ -43,9 +43,12 @@ namespace OpenRA.Mods.Common.Activities
 		{
 			if (self.Info.HasTraitInfo<IFacingInfo>() && Facing != null)
 				QueueChild(new Turn(self, Facing.Value));
-
-			if (self.Info.HasTraitInfo<AircraftInfo>())
-				QueueChild(new Land(self));
+			else
+			{
+				var aircraft = self.TraitOrDefault<Aircraft>();
+				if (aircraft != null && !aircraft.AtLandAltitude)
+					QueueChild(new Land(self));
+			}
 		}
 
 		public override bool Tick(Actor self)
