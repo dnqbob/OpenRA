@@ -90,6 +90,7 @@
     <Compile Include="Projectiles\InstantExplode.cs" />
     <Compile Include="Projectiles\RadBeam.cs" />
     <Compile Include="Projectiles\SpriteRailgun.cs" />
+    <Compile Include="Projectiles\SpriteAthenaLaser.cs" />
     <Compile Include="Traits\AIDeployHelper.cs" />
     <Compile Include="Traits\ChronoResourceDelivery.cs" />
     <Compile Include="Traits\Conditions\GrantConditionAboveAltitude.cs" />
@@ -115,6 +116,8 @@
     <Compile Include="Traits\Warheads\FireClusterWarhead.cs" />
     <Compile Include="Traits\Warheads\FireFragmentWarhead.cs" />
     <Compile Include="Traits\Warheads\FireShrapnelWarhead.cs" />
+    <Compile Include="Traits\Warheads\FireRadiusWarhead.cs" />
+    <Compile Include="Traits\Warheads\FireReverseRadiusWarhead.cs" />
     <Compile Include="Traits\Warheads\GlobalExplodeWeaponWarhead.cs" />
     <Compile Include="Traits\Warheads\RevealShroudWarhead.cs" />
     <Compile Include="Traits\Warheads\ScreenShakerWarhead.cs" />
