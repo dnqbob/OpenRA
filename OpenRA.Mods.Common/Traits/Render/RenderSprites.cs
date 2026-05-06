@@ -142,6 +142,8 @@ namespace OpenRA.Mods.Common.Traits.Render
 		public readonly RenderSpritesInfo Info;
 		readonly string faction;
 		readonly List<AnimationWrapper> anims = new();
+		readonly IEnumerable<IRenderable> renderables;
+		bool shouldRefreshPalettes;
 		string cachedImage;
 
 		public static Func<WAngle> MakeFacingFunc(Actor self)
@@ -157,6 +159,7 @@ namespace OpenRA.Mods.Common.Traits.Render
 		{
 			Info = info;
 			faction = init.GetValue<FactionInit, string>(init.Self.Owner.Faction.InternalName);
+			renderables = RenderAnimations(anims, init.Self);
 		}
 
 		public string GetImage(Actor self)
@@ -169,6 +172,7 @@ namespace OpenRA.Mods.Common.Traits.Render
 
 		public void UpdatePalette()
 		{
+			shouldRefreshPalettes = true;
 			foreach (var anim in anims)
 				anim.OwnerChanged();
 		}
@@ -178,16 +182,28 @@ namespace OpenRA.Mods.Common.Traits.Render
 
 		public virtual IEnumerable<IRenderable> Render(Actor self, WorldRenderer wr)
 		{
+			if (shouldRefreshPalettes)
+			{
+				shouldRefreshPalettes = false;
+				foreach (var a in anims)
+				{
+					if (a.PaletteReference == null)
+					{
+						var owner = self.EffectiveOwner != null && self.EffectiveOwner.Disguised ? self.EffectiveOwner.Owner : self.Owner;
+						a.CachePalette(wr, owner);
+					}
+				}
+			}
+
+			return renderables;
+		}
+
+		static IEnumerable<IRenderable> RenderAnimations(List<AnimationWrapper> anims, Actor self)
+		{
 			foreach (var a in anims)
 			{
 				if (!a.IsVisible)
 					continue;
-
-				if (a.PaletteReference == null)
-				{
-					var owner = self.EffectiveOwner != null && self.EffectiveOwner.Disguised ? self.EffectiveOwner.Owner : self.Owner;
-					a.CachePalette(wr, owner);
-				}
 
 				foreach (var r in a.Animation.Render(self, a.PaletteReference))
 					yield return r;
@@ -225,6 +241,7 @@ namespace OpenRA.Mods.Common.Traits.Render
 				isPlayerPalette = Info.Palette == null;
 			}
 
+			shouldRefreshPalettes = true;
 			anims.Add(new AnimationWrapper(anim, palette, isPlayerPalette));
 		}
 
