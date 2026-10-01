@@ -44,6 +44,9 @@ namespace OpenRA.Mods.AS.Projectiles
 		[Desc("Loop a randomly chosen sequence of Image from this list while this projectile is moving.")]
 		public readonly string[] Sequences = { "idle" };
 
+		[Desc("Should image facing ignore height?")]
+		public readonly bool FacingIgnoreAltitude = false;
+
 		[Desc("The palette used to draw this projectile.")]
 		[PaletteReference(nameof(IsPlayerPalette))]
 		public readonly string Palette = "effect";
@@ -220,7 +223,10 @@ namespace OpenRA.Mods.AS.Projectiles
 
 			if (!string.IsNullOrEmpty(info.Image))
 			{
-				anim = new Animation(world, info.Image, new Func<WAngle>(GetEffectiveFacing));
+				if (info.FacingIgnoreAltitude)
+					anim = new Animation(world, info.Image, () => facing);
+				else
+					anim = new Animation(world, info.Image, new Func<WAngle>(GetEffectiveFacingWithAltitude));
 				anim.PlayRepeating(info.Sequences.Random(world.SharedRandom));
 			}
 
@@ -247,7 +253,7 @@ namespace OpenRA.Mods.AS.Projectiles
 			shadowAlpha = info.ShadowColor.A / 255f;
 		}
 
-		WAngle GetEffectiveFacing()
+		WAngle GetEffectiveFacingWithAltitude()
 		{
 			var at = (float)ticks / (length - 1);
 			var attitude = angle.Tan() * (1 - 2 * at) / (4 * 1024);
@@ -284,7 +290,7 @@ namespace OpenRA.Mods.AS.Projectiles
 			if (!string.IsNullOrEmpty(info.TrailImage) && --smokeTicks < 0)
 			{
 				var delayedPos = WPos.LerpQuadratic(source, target, angle, ticks - info.TrailDelay, length);
-				world.AddFrameEndTask(w => w.Add(new SpriteEffect(delayedPos, GetEffectiveFacing(), w,
+				world.AddFrameEndTask(w => w.Add(new SpriteEffect(delayedPos, GetEffectiveFacingWithAltitude(), w,
 					info.TrailImage, info.TrailSequences.Random(world.SharedRandom), trailPalette)));
 
 				smokeTicks = info.TrailInterval;
