@@ -230,7 +230,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		public class AttackActivity : Activity, IActivityNotifyStanceChanged
 		{
-			readonly AttackFollow[] attacks;
+			readonly AttackFollow attack;
 			readonly RevealsShroud[] revealsShroud;
 			readonly IMove move;
 			readonly bool forceAttack;
@@ -253,7 +253,7 @@ namespace OpenRA.Mods.Common.Traits
 			public AttackActivity(Actor self, AttackSource source, in Target target, bool allowMove, bool forceAttack, Color? targetLineColor = null)
 			{
 				ActivityType = ActivityType.Attack;
-				attacks = self.TraitsImplementing<AttackFollow>().ToArray();
+				attack = self.Trait<AttackFollow>();
 				move = allowMove ? self.TraitOrDefault<IMove>() : null;
 				revealsShroud = self.TraitsImplementing<RevealsShroud>().ToArray();
 				rearmable = self.TraitOrDefault<Rearmable>();
@@ -264,6 +264,7 @@ namespace OpenRA.Mods.Common.Traits
 				this.targetLineColor = targetLineColor;
 				this.source = source;
 				isAircraft = self.Info.HasTraitInfo<AircraftInfo>();
+				ChildHasPriority = false;
 
 				// The target may become hidden between the initial order request and the first tick (e.g. if queued)
 				// Moving to any position (even if quite stale) is still better than immediately giving up
@@ -271,8 +272,8 @@ namespace OpenRA.Mods.Common.Traits
 					|| target.Type == TargetType.FrozenActor || target.Type == TargetType.Terrain)
 				{
 					lastVisibleTarget = Target.FromPos(target.CenterPosition);
-					lastVisibleMaximumRange = attacks.Max(af => af.GetMaximumRangeVersusTarget(this.target));
-					lastVisibleMinimumRange = attacks.Min(af => af.GetMinimumRangeVersusTarget(this.target));
+					lastVisibleMaximumRange = attack.GetMaximumRangeVersusTarget(target);
+					lastVisibleMinimumRange = attack.GetMinimumRangeVersusTarget(target);
 
 					if (target.Type == TargetType.Actor)
 					{
@@ -289,6 +290,12 @@ namespace OpenRA.Mods.Common.Traits
 
 			public override bool Tick(Actor self)
 			{
+				if (!IsCanceling && !HasArmamentsFor(target))
+					Cancel(self, true);
+
+				if (!TickChild(self))
+					return false;
+
 				returnToBase = false;
 
 				if (IsCanceling)
@@ -296,27 +303,25 @@ namespace OpenRA.Mods.Common.Traits
 
 				// Check that AttackFollow hasn't cancelled the target by modifying attack.Target
 				// Having both this and AttackFollow modify that field is a horrible hack.
-				if (hasTicked && attacks.All(a => a.RequestedTarget.Type == TargetType.Invalid))
+				if (hasTicked && attack.RequestedTarget.Type == TargetType.Invalid)
 					return true;
 
-				if (attacks.All(a => a.IsTraitPaused))
+				if (attack.IsTraitPaused)
 					return false;
 
 				target = target.Recalculate(self.Owner, out var targetIsHiddenActor);
-				foreach (var attack in attacks)
-					attack.SetRequestedTarget(target, forceAttack);
-
+				attack.SetRequestedTarget(target, forceAttack);
 				hasTicked = true;
 
 				if (!targetIsHiddenActor && target.Type == TargetType.Actor)
 				{
 					lastVisibleTarget = Target.FromTargetPositions(target);
-					lastVisibleMaximumRange = attacks.Max(af => af.GetMaximumRangeVersusTarget(target));
-					lastVisibleMinimumRange = attacks.Min(af => af.GetMinimumRange());
+					lastVisibleMaximumRange = attack.GetMaximumRangeVersusTarget(target);
+					lastVisibleMinimumRange = attack.GetMinimumRange();
 					lastVisibleOwner = target.Actor.Owner;
 					lastVisibleTargetTypes = target.Actor.GetEnabledTargetTypes();
 
-					var leeway = attacks.Min(af => af.Info.RangeMargin.Length);
+					var leeway = attack.Info.RangeMargin.Length;
 					if (leeway != 0 && move != null && target.Actor.Info.HasTraitInfo<IMoveInfo>())
 					{
 						var preferMinRange = Math.Min(lastVisibleMinimumRange.Length + leeway, lastVisibleMaximumRange.Length);
@@ -331,7 +336,7 @@ namespace OpenRA.Mods.Common.Traits
 				else if (target.Type == TargetType.FrozenActor && !lastVisibleTarget.IsValidFor(self))
 				{
 					lastVisibleTarget = Target.FromTargetPositions(target);
-					lastVisibleMaximumRange = attacks.Max(af => af.GetMaximumRangeVersusTarget(target));
+					lastVisibleMaximumRange = attack.GetMaximumRangeVersusTarget(target);
 					lastVisibleOwner = target.FrozenActor.Owner;
 					lastVisibleTargetTypes = target.FrozenActor.TargetTypes;
 				}
@@ -341,7 +346,7 @@ namespace OpenRA.Mods.Common.Traits
 				useLastVisibleTarget = targetIsHiddenActor || !target.IsValidFor(self);
 
 				// Most actors want to be able to see their target before shooting
-				if (target.Type == TargetType.FrozenActor && !attacks.Any(a => a.Info.TargetFrozenActors) && !forceAttack)
+				if (target.Type == TargetType.FrozenActor && !attack.Info.TargetFrozenActors && !forceAttack)
 				{
 					var rs = revealsShroud
 						.Where(t => !t.IsTraitDisabled)
@@ -363,15 +368,13 @@ namespace OpenRA.Mods.Common.Traits
 
 				// If all valid weapons have depleted their ammo and Rearmable trait exists, return to RearmActor to reload
 				// and resume the activity after reloading if AbortOnResupply is set to 'false'
-				if (rearmable != null && !useLastVisibleTarget
-					&& attacks.All(a => a.Armaments.All(x => x.IsTraitPaused || !x.Weapon.IsValidAgainst(target, self.World, self))))
+				if (rearmable != null && !useLastVisibleTarget && attack.Armaments.All(x => x.IsTraitPaused || !x.Weapon.IsValidAgainst(target, self.World, self)))
 				{
 					// Attack moves never resupply
 					if (source == AttackSource.AttackMove)
 						return true;
 
 					Activity rearmActivity = null;
-
 					if (isAircraft)
 						rearmActivity = new ReturnToBase(self);
 					else
@@ -391,8 +394,7 @@ namespace OpenRA.Mods.Common.Traits
 					if (rearmActivity == null)
 						return true;
 
-					var shouldAbort = attacks.All(a => a.Info.AbortOnResupply);
-					if (shouldAbort)
+					if (attack.Info.AbortOnResupply)
 					{
 						// AbortOnResupply cancels the current activity (after resupplying) plus any queued activities
 						NextActivity?.Cancel(self);
@@ -402,7 +404,7 @@ namespace OpenRA.Mods.Common.Traits
 						QueueChild(rearmActivity);
 
 					returnToBase = true;
-					return shouldAbort;
+					return attack.Info.AbortOnResupply;
 				}
 
 				var pos = self.CenterPosition;
@@ -430,8 +432,7 @@ namespace OpenRA.Mods.Common.Traits
 			protected override void OnLastRun(Actor self)
 			{
 				// Cancel the requested target, but keep firing on it while in range
-				foreach (var attack in attacks)
-					attack.ClearRequestedTarget();
+				attack.ClearRequestedTarget();
 			}
 
 			void IActivityNotifyStanceChanged.StanceChanged(Actor self, AutoTarget autoTarget, UnitStance oldStance, UnitStance newStance)
@@ -442,8 +443,7 @@ namespace OpenRA.Mods.Common.Traits
 
 				// If lastVisibleTarget is invalid we could never view the target in the first place, so we just drop it here too
 				if (!lastVisibleTarget.IsValidFor(self) || !autoTarget.HasValidTargetPriority(self, lastVisibleOwner, lastVisibleTargetTypes))
-					foreach (var attack in attacks)
-						attack.ClearRequestedTarget();
+					attack.ClearRequestedTarget();
 			}
 
 			public override IEnumerable<TargetLineNode> TargetLineNodes(Actor self)
@@ -453,9 +453,14 @@ namespace OpenRA.Mods.Common.Traits
 					if (returnToBase)
 						foreach (var n in ChildActivity.TargetLineNodes(self))
 							yield return n;
-					if (!returnToBase || attacks.Any(a => !a.Info.AbortOnResupply))
+					if (!returnToBase || !attack.Info.AbortOnResupply)
 						yield return new TargetLineNode(useLastVisibleTarget ? lastVisibleTarget : target, targetLineColor.Value);
 				}
+			}
+
+			bool HasArmamentsFor(Target target)
+			{
+				return !attack.IsTraitDisabled && attack.ChooseArmamentsForTarget(target, forceAttack).Any();
 			}
 		}
 	}

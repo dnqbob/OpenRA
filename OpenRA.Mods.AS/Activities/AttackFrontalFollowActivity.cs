@@ -53,6 +53,7 @@ namespace OpenRA.Mods.AS.Activities
 			this.target = target;
 			this.forceAttack = forceAttack;
 			this.targetLineColor = targetLineColor;
+			ChildHasPriority = false;
 
 			// The target may become hidden between the initial order request and the first tick (e.g. if queued)
 			// Moving to any position (even if quite stale) is still better than immediately giving up
@@ -78,6 +79,12 @@ namespace OpenRA.Mods.AS.Activities
 
 		public override bool Tick(Actor self)
 		{
+			if (!IsCanceling && !HasArmamentsFor(target))
+				Cancel(self, true);
+
+			if (!TickChild(self))
+				return false;
+
 			if (IsCanceling)
 				return true;
 
@@ -198,6 +205,11 @@ namespace OpenRA.Mods.AS.Activities
 		{
 			if (targetLineColor != null)
 				yield return new TargetLineNode(useLastVisibleTarget ? lastVisibleTarget : target, targetLineColor.Value);
+		}
+
+		bool HasArmamentsFor(Target target)
+		{
+			return !attack.IsTraitDisabled && attack.ChooseArmamentsForTarget(target, forceAttack).Any();
 		}
 	}
 }
